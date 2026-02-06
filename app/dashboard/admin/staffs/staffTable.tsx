@@ -3,13 +3,14 @@
 import React from "react";
 import UITable from "@/components/uiTable";
 import {Button} from "@mui/material";
-import RemoveEntityDialog from "@/components/admin/removeEntityDialog";
-import {addFlight, removeFlight} from "@/actions/flight";
+import ConfirmEntityDialog from "@/components/confirmEntityDialog";
+import {addFlight, addStaff, removeStaff} from "@/actions/endpoints";
 import AddPassengerDialog from "@/components/admin/addPassengerDialog";
 import {DataRow} from "@/types/dataRow";
+import AddStaffDialog from "@/components/admin/addStaffDialog";
 
 interface StaffTableProps {
-    passengerId: string;
+    staffId: string;
     // onAddFlight: (flightId: string) => void;
 }
 
@@ -21,19 +22,19 @@ interface StaffRow extends DataRow {
     action: string;
 }
 
-const columns = ["name", "role", "Airline Assigned", "status", "action"];
+const columns = ["name", "role", "Airline", "status", "action"];
 const rows: StaffRow[] = [
     {
         name: "Mary M.",
-        airline: "AA",
         role: "Gate",
+        airline: "AA",
         status: "Enabled",
         action: "Remove",
     },
     {
         name: "IP Man",
-        airline: "UA",
         role: "Airline",
+        airline: "UA",
         status: "Enabled",
         action: "Remove",
     },
@@ -46,22 +47,24 @@ const rows: StaffRow[] = [
     }
 ];
 
-const StaffTable = ({passengerId}: StaffTableProps) => {
-    const [passengerToRemove, setPassengerToRemove] = React.useState<string | null>(null);
+const StaffTable = ({staffId}: StaffTableProps) => {
+    const [staffToRemove, setStaffToRemove] = React.useState<string | null>(null);
     const [isConfirm, setConfirm] = React.useState(false);
     const [isAdd, setIsAdd] = React.useState(false);
 
 
     const handleOnRemove = async (proceed: boolean) => {
         console.log('proceed', proceed);
-        await removeFlight(passengerId);
+
+        await removeStaff(staffId);
         setConfirm(false); // UI state stays on client
     };
 
-    const handleAddPassenger = async (row: DataRow) => {
-        const {airlineCode, flightNumber} = row;
-        console.log('Airline', flightNumber);
-        await addFlight(airlineCode);
+    const handleAddStaff = async (row: DataRow) => {
+        const {firstName, lastName} = row;
+
+        console.log('lastName', lastName);
+        await addStaff(firstName);
     };
 
     return (
@@ -69,34 +72,34 @@ const StaffTable = ({passengerId}: StaffTableProps) => {
             <UITable<StaffRow>
                 columns={columns}
                 rows={rows}
-                title={`Passenger Management ${passengerId}`}
+                title={`Staff Management ${staffId}`}
                 topButton={
-                    <Button variant="outlined" onClick={() => setIsAdd(true)}>
-                        Add Passenger
+                    <Button variant="outlined" sx={{textTransform:'none'}} onClick={() => setIsAdd(true)}>
+                        Add Staff
                     </Button>
                 }
                 onActionCallback={(row: StaffRow) => {
                     console.log('row', row.airline);
-                    setPassengerToRemove(row.airline);
+                    setStaffToRemove(row.airline);
                     setConfirm(true);
                 }}
             />
-            <RemoveEntityDialog
+            <ConfirmEntityDialog
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
-                title="Remove passenger"
-                flightId={passengerId}
+                title="Remove Staff"
+                dataId={staffId}
                 message={
                     <>
-                        Are you sure you want to remove passenger Mary M. from <strong>Flight AA1234?</strong> This action cannot be undone.
+                        Are you sure you want to remove staff <b>IP Man</b> account? This action cannot be undone.
                     </>
                 }
                 onRemove={handleOnRemove}
             />
-            <AddPassengerDialog
+            <AddStaffDialog
                 open={isAdd}
                 onClose={() => setIsAdd(false)}
-                onAddPassenger={handleAddPassenger}
+                onAddStaff={handleAddStaff}
             />
         </>
     );

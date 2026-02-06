@@ -1,58 +1,105 @@
+'use client';
+
 import {
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
-    TableRow,
-    Paper, Button, Typography,
+    TableRow, Container,
+    Paper, Typography, Button,
 } from '@mui/material';
-import React from "react";
+import React, {ReactNode} from "react";
+import {DataRow} from "@/types/dataRow";
+import {toCamelCase} from "@/components/util";
 
-type tableProps = {
-    columns: string[];
-    rows: (number | string)[][];
-    title: string;
-};
+interface TableProps<T extends DataRow> {
+    name?: string;
+    title?: string;
+    topButton?: ReactNode;
+    topAlignment?: 'left' | 'center' | 'right' | 'justify';
+    columns: string[];          // keys, in display order
+    rows: T[];
+    onActionCallback?: (row: T) => void;
+}
 
-const UITable =  ({columns, rows, title}: tableProps) => {
 
+const UITable = <T extends DataRow>({
+                                        columns,
+                                        rows,
+                                        title,
+                                        name,
+                                        topButton,
+                                        topAlignment,
+                                        onActionCallback
+                                    }: TableProps<T>) => {
     return (
-        <TableContainer component={Paper}>
-            <Typography variant="h4" component="h1" sx={{textAlign: 'center'}} gutterBottom>
-                {title}
-            </Typography>
-            <Table>
-                <TableHead>
-                    {/* Full-width button row */}
-                    <TableRow>
-                        <TableCell colSpan={6} align="right">
-                            <Button variant="outlined" color="primary">
-                                Add Flight
-                            </Button>
-                        </TableCell>
-                    </TableRow>
+        <Container maxWidth="md">
+            <>
+                {title && (
+                    <Typography variant="h4" component="h1" sx={{textAlign: 'center', mb: 1}} gutterBottom>
+                        {title}
+                    </Typography>
+                )}
+                {name && (
+                    <Typography variant="h6" fontWeight='normal' sx={{textAlign: 'center', mb: 5}} gutterBottom>
+                        <b>Welcome</b>, {name}!
+                    </Typography>
+                )}
+            </>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        {/* Full-width button row */}
+                        {topButton && (
+                            <TableRow>
+                                <TableCell colSpan={columns.length + 1} align={topAlignment ?? 'right'}>
+                                    {topButton}
+                                </TableCell>
+                            </TableRow>
+                        )}
 
-                    {/* Column headers */}
-                    <TableRow>
-                        {columns.map((col) => (
-                            <TableCell key={col}>{col}</TableCell>
-                        ))}
-                    </TableRow>
-                </TableHead>
-
-                <TableBody>
-                    {rows.map((row, i) => (
-                        <TableRow key={i}>
-                            <TableCell key={i+1}>{i+1}</TableCell>
-                            {row.map((cell) => (
-                                <TableCell key={cell}>{cell}</TableCell>
+                        {/* Column headers */}
+                        <TableRow>
+                            <TableCell align={"center"}>#</TableCell>
+                            {columns.map((col) => (
+                                <TableCell key={col} sx={{fontWeight: 'bold'}}
+                                           align={"center"}>{col.toUpperCase()}</TableCell>
                             ))}
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                    </TableHead>
+
+                    <TableBody>
+                        {rows.map((row, i) => (
+                            <TableRow key={i} hover>
+                                <TableCell align={"center"}>{i + 1}</TableCell>
+
+                                {columns.map((col) => (
+                                    <TableCell key={col} align={"center"}>
+                                        {col === "action" ? (
+                                            <Button
+                                                key={i}
+                                                size="small"
+                                                color="error"
+                                                variant="text"
+                                                sx={{textTransform: 'none'}}
+                                                onClick={() => onActionCallback?.(row)}
+                                            >
+                                                {row[col]}
+                                            </Button>
+                                        ) : (
+                                            row[toCamelCase(col)]
+                                        )}
+                                    </TableCell>
+
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Container>
     );
 }
 export default UITable;
+

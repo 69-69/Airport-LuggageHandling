@@ -8,7 +8,7 @@ import {addFlight, fetchOnBoardData, removeStaff} from "@/actions/endpoints";
 import {DataRow} from "@/types/dataRow";
 import {useParams} from "next/navigation";
 
-interface CheckInRow extends DataRow {
+interface ClearanceRow extends DataRow {
     bagId: string;
     flight: string;
     ticket: string;
@@ -17,7 +17,7 @@ interface CheckInRow extends DataRow {
 }
 
 const columns = ["bag id", "flight", "ticket", "status", "action"];
-const rows: CheckInRow[] = [
+const rows: ClearanceRow[] = [
     {
         bagId: "123654",
         flight: "AA3245",
@@ -34,12 +34,12 @@ const rows: CheckInRow[] = [
     },
 ];
 
-const SecurityClearanceDashboard = () => {
+const WorkAtClearanceDashboard = () => {
     const params = useParams();
     const flight_id = params?.flight_id as string;
 
     const [data, setData] = React.useState([]);
-    const [selectedRow, setSelectedRow] = React.useState<CheckInRow>();
+    const [selectedRow, setSelectedRow] = React.useState<ClearanceRow>();
     const [isConfirm, setConfirm] = React.useState<boolean>(false);
 
     const handleOnRemove = async (proceed: boolean) => {
@@ -58,7 +58,7 @@ const SecurityClearanceDashboard = () => {
 
     return (
         <>
-            <UITable<CheckInRow>
+            <UITable<ClearanceRow>
                 columns={columns}
                 rows={rows}
                 title='Security Clearance Dashboard'
@@ -76,12 +76,11 @@ const SecurityClearanceDashboard = () => {
             <ConfirmEntityDialog
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
-                title="Undo Onboard"
+                title="Security Clearance"
                 dataId={flight_id}
                 message={
                     <>
-                        This will remove<strong>{selectedRow?.bagId}</strong> from the onboard list for
-                        flight<strong>{selectedRow?.flight}.</strong> Do you want to continue?
+                        Are you sure you want to proceed with the selected?
                     </>
                 }
                 onRemove={handleOnRemove}
@@ -90,4 +89,4 @@ const SecurityClearanceDashboard = () => {
     );
 }
 
-export default SecurityClearanceDashboard;
+export default WorkAtClearanceDashboard;

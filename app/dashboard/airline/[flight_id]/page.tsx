@@ -1,18 +1,12 @@
 'use client';
 
-import React from "react";
+import React, {useEffect} from "react";
 import UITable from "@/components/uiTable";
-import {Box, Button, Typography} from "@mui/material";
-import RemoveEntityDialog from "@/components/removeEntityDialog";
-import {addFlight, removeStaff} from "@/actions/flight";
-import AddFlightDialog from "@/components/admin/addFlightDialog";
+import {Typography} from "@mui/material";
+import ConfirmEntityDialog from "@/components/confirmEntityDialog";
+import {fetchFlightData, removeStaff} from "@/actions/endpoints";
 import {DataRow} from "@/types/dataRow";
-import {useRouter} from "next/navigation";
-
-interface CheckInTableProps {
-    flightId: string;
-    // onAddFlight: (flightId: string) => void;
-}
+import {useParams} from "next/navigation";
 
 interface CheckInRow extends DataRow {
     name: string;
@@ -40,29 +34,34 @@ const rows: CheckInRow[] = [
     },
 ];
 
-const CheckInsTable = ({flightId}: CheckInTableProps) => {
-    const [isAdd, setIsAdd] = React.useState<boolean>(false);
+const CheckInsTable = () => {
+    const params = useParams();
+    const flight_id = params?.flight_id as string;
+
+    const [data, setData] = React.useState([]);
     const [selectedRow, setSelectedRow] = React.useState<CheckInRow>();
     const [isConfirm, setConfirm] = React.useState<boolean>(false);
 
-
     const handleOnRemove = async (proceed: boolean) => {
         console.log('proceed', proceed);
-        await removeStaff(flightId);
+        await removeStaff(flight_id);
     };
 
-    const handleAddFlight = async (row: DataRow) => {
-        const {airlineCode, flightNumber} = row;
-        console.log('Flight', flightNumber);
-        await addFlight(airlineCode);
-    };
+    useEffect(() => {
+        if (!flight_id) return;
+
+        fetchFlightData(flight_id)
+            .then(setData)
+            .catch(console.error);
+    }, [flight_id]); // dependency array
+
 
     return (
         <>
             <UITable<CheckInRow>
                 columns={columns}
                 rows={rows}
-                title='Checked-in Passengers'
+                title='Passenger Manifest'
                 topAlignment='center'
                 topButton={
                     <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
@@ -74,11 +73,11 @@ const CheckInsTable = ({flightId}: CheckInTableProps) => {
                     setConfirm(true);
                 }}
             />
-            <RemoveEntityDialog
+            <ConfirmEntityDialog
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
                 title="Undo Check-in"
-                flightId={flightId}
+                dataId={flight_id}
                 message={
                     <>
                         This will remove<strong>{selectedRow?.name}</strong> from the check-in list for
@@ -86,11 +85,6 @@ const CheckInsTable = ({flightId}: CheckInTableProps) => {
                     </>
                 }
                 onRemove={handleOnRemove}
-            />
-            <AddFlightDialog
-                open={isAdd}
-                onClose={() => setIsAdd(false)}
-                onAddFlight={handleAddFlight}
             />
         </>
     );

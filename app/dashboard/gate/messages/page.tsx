@@ -8,11 +8,11 @@ import {addFlight, removeStaff} from "@/actions/endpoints";
 import AddFlightDialog from "@/components/admin/addFlightDialog";
 import {DataRow} from "@/types/dataRow";
 import {useParams} from "next/navigation";
-import MessageDialog from "@/components/airline/postMessageDialog";
+import MessageDialog from "@/components/postMessageDialog";
 
 interface MessageRow extends DataRow {
     id: string;
-    message: string;
+    message: React.ReactNode;
     status: string;
     action: string;
 }
@@ -20,13 +20,13 @@ interface MessageRow extends DataRow {
 const columns = ["message", "status", "action"];
 const rows: MessageRow[] = [
     {
-        message: "[ 05:40 AM ] Security or bag issues visible (from: Gina)",
+        message: <><b>[ 05:40 AM ]</b> Security or bag issues visible <b>[ from: Gina ]</b></>,
         id: "123",
         status: 'Read',
         action: "Delete"
     },
     {
-        message: "[ 01:40 PM ] Missing passenger bag (from: Gina)",
+        message: <><b>[ 01:40 PM ]</b> Missing passenger bag <b>[ from: Tina ]</b></>,
         id: "321",
         status: 'Unread',
         action: "Delete"
@@ -88,7 +88,7 @@ const MessageBoardTable = () => {
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
                 title="Delete Message"
-                flightId={flight_id}
+                dataId={flight_id}
                 message={
                     <>
                         Are you sure you want to delete this message? Once deleted, recipient will no longer be able see it.

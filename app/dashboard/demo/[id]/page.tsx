@@ -1,13 +1,15 @@
 
-import FlightTable from "@/app/dashboard/admin/flight/flightTable";
+import FlightTable from "@/app/dashboard/admin/flights/flightTable";
 
-const FiveByFiveTable = async ({params}: { params: Promise<{ flightId: string }> }) => {
-    const {flightId} = await params;
-    console.log(flightId);
+const DemoWithID = async ({params}: { params: Promise<{ id: string }> }) => {
+    const {id} = await params;
+    console.log(id);
 
 
     return (
-        <FlightTable flightId={flightId}/>
+        <div>
+            <h1>Demo Number: #{id}</h1>
+        </div>
     );
 }
-export default FiveByFiveTable;
+export default DemoWithID;

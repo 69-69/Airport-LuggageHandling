@@ -44,7 +44,7 @@ const rows: TodayFlightRow[] = [
 ];
 
 
-const GateStaffDashboard = () => {
+const WorkAtGateDashboard = () => {
     const [isConfirm, setConfirm] = React.useState(false);
     const  [isConfirmDeparture, setConfirmDeparture] = React.useState(false);
     const [isConfirmChanges, setConfirmChanges] = React.useState(false);
@@ -212,4 +212,4 @@ const GateStaffDashboard = () => {
     )
 }
 
-export default GateStaffDashboard
+export default WorkAtGateDashboard

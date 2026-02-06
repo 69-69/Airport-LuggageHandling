@@ -20,13 +20,13 @@ interface MessageRow extends DataRow {
 const columns = ["message", "status", "action"];
 const rows: MessageRow[] = [
     {
-        message: <><b>[ 05:40 AM ]</b> Security or bag issues visible <b>[ from: Gina ]</b></>,
+        message: <><b>[ 05:40 AM ]</b> Security or bag issues visible <b>[ from: Ben ]</b></>,
         id: "123",
         status: 'Read',
         action: "Delete"
     },
     {
-        message: <><b>[ 01:40 PM ]</b> Missing passenger bag <b>[ from: Tina ]</b></>,
+        message: <><b>[ 01:40 PM ]</b> Missing passenger bag <b>[ from: Ryan ]</b></>,
         id: "321",
         status: 'Unread',
         action: "Delete"
@@ -88,7 +88,7 @@ const MessageBoardTable = () => {
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
                 title="Delete Message"
-                flightId={flight_id}
+                dataId={flight_id}
                 message={
                     <>
                         Are you sure you want to delete this message? Once deleted, recipient will no longer be able see it.

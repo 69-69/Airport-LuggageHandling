@@ -39,3 +39,15 @@ export async function removePassenger(passengerId: string | number) {
     // await db.delete('passenger', passengerId);
     return { success: true };
 }
+
+export const fetchFlightData = async (flight_id: string) => {
+    const res = await fetch(`/api/flights/${flight_id}`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    return await res.json();
+};
+
+export const fetchOnBoardData = async () => {
+    const res = await fetch(`/api/onboard/flight`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    return await res.json();
+};

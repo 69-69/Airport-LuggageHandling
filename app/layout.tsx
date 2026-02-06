@@ -1,3 +1,105 @@
+'use client';
+
+// app/layout.tsx
+import {AppRouterCacheProvider} from '@mui/material-nextjs/v16-appRouter';
+import {ThemeProvider} from '@mui/material/styles';
+import {Roboto} from 'next/font/google';
+
+import React from "react";
+import theme from "@/app/theme";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import Box from "@mui/material/Box";
+import Sidebar from "@/components/sidebar";
+import {AuthProvider, useAuth} from "@/actions/authContext";
+import FullScreenLoader from "@/components/fullScreenLoader";
+
+const roboto = Roboto({
+    weight: ['300', '400', '500', '700'],
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-roboto',
+});
+
+/*// TEMP: replace later with auth context
+const user: {
+    role: UserRole;
+    username: string;
+    airlineCode?: string;
+} = {
+    role: 'GATE', // ADMIN
+    username: 'gate01', // admin01
+    airlineCode: 'AA',
+};*/
+
+const AppShell = ({children}: { children: React.ReactNode }) => {
+    const {user, logout, loading} = useAuth();
+
+    if (loading) return <FullScreenLoader />;
+
+    return (
+        <>
+            <Box sx={{display: 'flex', minHeight: '100vh'}}>
+                {user ? ( // Authenticated Header
+                    <>
+                        <Header
+                            username={user.username}
+                            role={user.role}
+                            accessLevel={user.accessLevel}
+                            onLogout={logout}
+                        />
+                        <Sidebar role={user.role}/>
+                    </>
+                ) : (
+                    <Header/> // Un-authenticated Header
+                )}
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        p: 3,
+                        mt: '64px',
+                        m: '0 auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                    {children}
+                </Box>
+            </Box>
+            <Footer/>
+        </>
+    );
+}
+
+export default function RootLayout({children}: { children: React.ReactNode; }) {
+    return (
+        <html lang="en" className={roboto.variable}>
+        <body>
+        <AppRouterCacheProvider>
+            <ThemeProvider theme={theme}>
+                <AuthProvider>
+                    <AppShell>{children}</AppShell>
+                </AuthProvider>
+            </ThemeProvider>
+        </AppRouterCacheProvider>
+        </body>
+        </html>
+    );
+}
+
+
+/*<main style={{
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',}}>
+    {children}
+</main>
+<Box component="main" sx={{flexGrow: 1, p: 3, mt: '64px', ml: '240px'}}>
+    {children}
+</Box>
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -30,3 +132,4 @@ export default function RootLayout({
     </html>
   );
 }
+*/

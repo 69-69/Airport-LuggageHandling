@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import Info from "@mui/icons-material/Info";
 import UiDialog from "@/components/uiDialog";
+import {clearErrorAndSet, passwordRegex} from "@/components/util";
 
 
 interface ChangePasswordDialogProps {
@@ -30,7 +31,7 @@ const ChangePasswordDialog = ({
 
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [error, setError] = React.useState<string | null>(null);
 
     const handlePasswordChange = () => {
         if (oldPassword === newPassword) {
@@ -41,9 +42,6 @@ const ChangePasswordDialog = ({
             setError('New password and confirm password do not match');
             return;
         }
-
-        // Password rules (example)
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
         if (!passwordRegex.test(newPassword)) {
             setError(
                 'Password must be at least 6 characters with uppercase, lowercase, and number'
@@ -59,12 +57,17 @@ const ChangePasswordDialog = ({
     return (
         <UiDialog
             open={open}
-            onClose={onClose}
+            onCancel={onClose}
             title="Change Password"
             cancelLabel='Cancel'
-            submitLabel='Save Changes'
-            confirmDisabled={error.length>0}
-            onConfirmCallback={handlePasswordChange}
+            confirmLabel='Save Changes'
+            confirmDisabled={
+                !newPassword ||
+                !confirmPassword ||
+                newPassword !== confirmPassword ||
+                (error?.length ?? 0) > 0
+            }
+            onConfirm={handlePasswordChange}
             content={
                 <>
                     <Typography
@@ -80,7 +83,7 @@ const ChangePasswordDialog = ({
                         fullWidth
                         size="small"
                         value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        onChange={clearErrorAndSet(setNewPassword, setError)}
                         slotProps={{input: {id: 'new-password', autoFocus: true},}}
                     />
                     <TextField
@@ -89,12 +92,12 @@ const ChangePasswordDialog = ({
                         fullWidth
                         size="small"
                         value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onChange={clearErrorAndSet(setConfirmPassword, setError)}
                         slotProps={{input: {id: 'confirm-new-password'}}}
                     />
 
                     {error && (
-                        <Typography color="error" variant="body2">
+                        <Typography color="error" variant="body2" sx={{mb:1}}>
                             {error}
                         </Typography>
                     )}

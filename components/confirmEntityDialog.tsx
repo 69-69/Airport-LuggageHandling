@@ -12,23 +12,23 @@ import {
 import Info from "@mui/icons-material/Info";
 import UiDialog from "@/components/uiDialog";
 
-interface RemoveFlightDialogProps {
+interface ConfirmFlightDialogProps {
     open: boolean;
     onClose: () => void;
     title: string;
     message: React.ReactNode;
-    flightId: number | string;
+    dataId: number | string;
     onRemove: (proceed: boolean) => void;
 }
 
-const RemoveEntityDialog = ({open, onClose, title, message, flightId, onRemove} : RemoveFlightDialogProps) => {
+const ConfirmEntityDialog = ({open, onClose, title, message, dataId, onRemove} : ConfirmFlightDialogProps) => {
     // const {open, onClose, flightId} = params;
 
     const [error, setError] = React.useState('');
 
-    const handleRemoveFlight = () => {
-        if (!flightId) {
-            setError("Select a flights to remove.");
+    const handleConfirm = () => {
+        if (!dataId) {
+            setError("Something went wrong. kindly try again!");
             return;
         }
 
@@ -39,9 +39,9 @@ const RemoveEntityDialog = ({open, onClose, title, message, flightId, onRemove} 
     return (
         <UiDialog
             open={open}
-            onClose={onClose}
+            onCancel={onClose}
             title={title}
-            onConfirmCallback={handleRemoveFlight}
+            onConfirm={handleConfirm}
             content={
                 <>
                     <Typography
@@ -66,4 +66,4 @@ const RemoveEntityDialog = ({open, onClose, title, message, flightId, onRemove} 
     );
 }
 
-export default RemoveEntityDialog;
+export default ConfirmEntityDialog;

@@ -5,58 +5,64 @@ import {
     Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
-import {DataRow} from "@/types/dataRow";
-import {AutocompleteDropdown} from "@/components/dropdown";
+import {useSearchParams} from 'next/navigation';
+import {dashboardRedirectPath, RoleEnum} from "@/types/userRole";
+import {useAuth} from "@/actions/authContext";
 
 interface WorkPrefDialogProps {
     open: boolean;
     onClose: () => void;
+    onGateSelected: (isGate: boolean) => void;
 }
 
 const WorkPreferenceDialog = ({
-                              open,
-                              onClose,
-                          }: WorkPrefDialogProps) => {
+                                  open,
+                                  onClose,
+                                  onGateSelected,
+                              }: WorkPrefDialogProps) => {
 
-    const [newGate, setNewGate] = React.useState('');
-    const [error, setError] = React.useState('');
+    const searchParams = useSearchParams();
+    const {user, login, logout} = useAuth();
 
-    const handleChange = () => {
-        if (newGate == '') {
-            setError('New gate is required');
-            return;
+    const handleClearance = () => {
+        if (user) {
+            const updatedUser = {
+                ...user,
+                accessLevel: 'security' // Security Clearance is Selected
+            }
+
+            // persist updated user
+            const redirectPath = searchParams.get('redirect') || dashboardRedirectPath({role: user.role});
+            login(updatedUser, true, redirectPath);
+
+            onClose(); // close dialog
         }
-
-        setError('');
-        // Set preference to localStorage
-        onClose();
     };
 
-    const handleLogout = () => {
+    const handleGate = () => {
+        onGateSelected(true);
+    }
 
-        // logout
-        onClose();
+    const handleLogout = () => {
+        logout(); // logout
+        onClose(); // close dialog
     };
 
     return (
         <UiDialog
             open={open}
-            onClose={handleLogout}
-            title="Change Gate Information"
-            onConfirmCallback={handleChange}
-            cancelLabel={'Logout'}
-            submitLabel={'Assign'}
+            title="Work Preference"
+            cancelLabel='Logout'
+            onCancel={handleLogout}
+            confirmLabel='Monitor Security Clearance'
+            onConfirm={handleClearance}
+            optionLabel='Work at Gate'
+            onOption={handleGate}
             content={
                 <>
-                    <AutocompleteDropdown
-                        label="Gate Preference" data={["G1", "G2", "G3"]}
-                        onChange={(e) => setNewGate(e)}
-                    />
-                    {error && (
-                        <Typography color="error" variant="body2">
-                            {error}
-                        </Typography>
-                    )}
+                    <Typography id="work-preference" sx={{alignItems: 'center', gap: 1}}>
+                        <b>Welcome</b>! Choose your work area to begin your shift. Or select Logout to exit
+                    </Typography>
                 </>
             }/>
     );

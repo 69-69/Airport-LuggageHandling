@@ -2,112 +2,71 @@
 
 import * as React from 'react';
 import {
-    InputAdornment,
     TextField,
     Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
-import {fontWeight, Grid} from "@mui/system";
+import {numberOfBags} from "@/components/util";
 
-interface AddFlightDialogProps {
+interface CheckInDialogProps {
     open: boolean;
     onClose: () => void;
-    onAddFlight: (row: DataRow) => void;
+    onCheckIn: (row: DataRow) => void;
 }
 
-const AddFlightDialog = ({
+const CheckInDialog = ({
                              open,
                              onClose,
-                             onAddFlight,
-                         }: AddFlightDialogProps) => {
+                             onCheckIn,
+                         }: CheckInDialogProps) => {
 
-    const [airlineCode, setAirlineCode] = React.useState('');
-    const [flightNumber, setFlightNumber] = React.useState('');
-    const [flightId, setFlightId] = React.useState('');
+    const [ticketNumber, setTicketNumber] = React.useState('');
+    const [numberBags, setNumberBags] = React.useState('');
     const [error, setError] = React.useState('');
 
     const handleChange = () => {
-        if (airlineCode == '') {
-            setError('Airline Code is required');
+        if (ticketNumber == '') {
+            setError('Ticket number is required');
             return;
         }
-        if (flightNumber == '') {
-            setError('Flight Number is required');
+        if (numberBags == '') {
+            setError('Enter the number of bags');
             return;
         }
 
         setError('');
-        onAddFlight({
-            airlineCode: airlineCode,
-            flightNumber: flightNumber,
+        onCheckIn({
+            ticketNumber: ticketNumber,
+            numberBags: numberBags,
         });
         onClose();
     };
 
-    let inputAdornment = <><InputAdornment
-        position="start"
-        sx={{bgcolor: 'rgba(109,184,236,0.8)', py: 0.1, px: 1, borderRadius: 1}}
-    >
-        <Typography color="error">Auto</Typography>
-    </InputAdornment></>;
     return (
         <UiDialog
             open={open}
-            onClose={onClose}
-            title="Add Flight"
-            onConfirmCallback={handleChange}
+            onCancel={onClose}
+            title="Check In"
+            onConfirm={handleChange}
             cancelLabel={'Cancel'}
-            submitLabel={'Add'}
+            confirmLabel={'Check-In'}
             content={
                 <>
                     <TextField
-                        label="Airline Name"
+                        label="Ticket Number"
                         type="text"
                         fullWidth
                         size="small"
-                        value={airlineCode}
-                        onChange={(e) => setAirlineCode(e.target.value)}
-                        slotProps={{input: {id: 'airline-code', autoFocus: true},}}
+                        value={ticketNumber}
+                        onChange={(e) => setTicketNumber(e.target.value)}
+                        slotProps={{input: {id: 'ticket-number', autoFocus: true},}}
                     />
-
-                    <Grid container spacing={2}>
-                        <Grid size={{xs: 12, md: 6}}>
-                            <TextField
-                                label="Flight Number"
-                                type="text"
-                                fullWidth
-                                size="small"
-                                value={flightNumber}
-                                onChange={(e) => setFlightNumber(e.target.value)}
-                                slotProps={{
-                                    input: {
-                                        id: 'flight-number',
-                                        startAdornment: inputAdornment,
-                                    },
-                                }}
-                            />
-                        </Grid>
-                        <Grid size={{xs: 12, md: 6}}>
-                            <TextField
-                                label="Flight ID"
-                                type="text"
-                                fullWidth
-                                size="small"
-                                value={flightId}
-                                onChange={(e) => setFlightId(e.target.value)}
-                                slotProps={{
-                                    input: {
-                                        id: 'flight-id',
-                                        startAdornment: inputAdornment,
-                                    },
-                                }}
-                            />
-                        </Grid>
-                    </Grid>
-                    <AutocompleteDropdown label="Terminal" data={["T1", "T2", "T3"]}/>
-                    <AutocompleteDropdown label="Gate Number" data={["G1", "G2", "G3"]}/>
+                    <AutocompleteDropdown
+                        label="Number of Bags" data={numberOfBags}
+                        onChange={(e) => setNumberBags(e)}
+                    />
                     {error && (
                         <Typography color="error" variant="body2">
                             {error}
@@ -118,5 +77,5 @@ const AddFlightDialog = ({
     );
 }
 
-export default AddFlightDialog;
+export default CheckInDialog;
 

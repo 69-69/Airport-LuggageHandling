@@ -1,9 +1,115 @@
 'use client';
 
-const Page = () => {
-    return (
-        <div>Passenger login</div>
-    )
-}
-export default Page
+import React, {useState} from 'react';
+import {Box, Button, TextField, Typography, Paper, Divider, Link} from '@mui/material';
+import { useSearchParams} from 'next/navigation';
+import {dashboardRedirectPath, RoleEnum} from "@/types/userRole";
+import {useAuth} from "@/actions/authContext";
+import {clearErrorAndSet, isNumeric} from "@/components/util";
 
+const PassengerLoginForm = () => {
+    const {login} = useAuth();
+    const searchParams = useSearchParams();
+    const [error, setError] = useState<string | null>(null);
+    const [ticketNumber, setTicketNumber] = useState('');
+    const [identification, setIdentification] = useState('');
+
+    const handleSubmit = (e: React.SubmitEvent) => {
+        e.preventDefault();
+
+        if (ticketNumber.length!==10) {
+            setError('Please enter a valid 10 digit ticket number.');
+            return;
+        }
+        let id = identification.trim();
+        if (id.length !== 6 || !isNumeric(id)) {
+            setError('Please enter a valid 6 digit identification number.');
+            return;
+        }
+
+        // TODO: call backend API here
+        // Fake backend response for now
+        const userFromApi = {
+            username: 'steve',
+            role: RoleEnum.PASSENGER, // or 'ADMIN', 'GROUND', 'PASSENGER'.
+            airlineCode: 'UA',
+        };
+
+        // persist updated user
+        const redirectPath = searchParams.get('redirect') || dashboardRedirectPath({role: userFromApi.role});
+        login(userFromApi, true, redirectPath);
+    };
+
+    return (
+        <Box
+            sx={{
+                minWidth: {xs: '90%', sm: 400},
+            }}
+        >
+            <Paper sx={{
+                p: 4, width: '100%',
+                border: '1px dashed grey',
+            }} elevation={3}>
+                <Typography variant="h5" sx={{mb: 3, textAlign: 'center'}}>
+                    Passenger Login
+                </Typography>
+                <form onSubmit={handleSubmit}
+                      style={{
+                          width: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                      }}>
+                    <TextField
+                        label="Ticket Number"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                        required
+                        slotProps={{
+                            input: {
+                                inputProps: {maxLength: 10,}
+                            },
+                        }}
+                        sx={{mb: 2}}
+                        value={ticketNumber}
+                        onChange={clearErrorAndSet(setTicketNumber, setError)}
+                    />
+                    <TextField
+                        label="Identification"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                        required
+                        slotProps={{
+                            input: {
+                                inputProps: {maxLength: 6,}
+                            },
+                        }}
+                        sx={{mb: 3}}
+                        value={identification}
+                        onChange={clearErrorAndSet(setIdentification, setError)}
+                    />
+                    {error && (
+                        <Typography color="error" variant="body2" sx={{mb: 1}}>
+                            {error}
+                        </Typography>
+                    )}
+                    <Button type="submit" variant="contained" color="primary"
+                            sx={{textTransform: 'none'}}
+                            disabled={!ticketNumber || !identification}
+                            fullWidth
+                    >
+                        Login
+                    </Button>
+                    <Divider sx={{width: 200, my: 1}}>
+                        +
+                    </Divider>
+                    <Link href="/">Back</Link>
+                </form>
+            </Paper>
+        </Box>
+    );
+};
+
+export default PassengerLoginForm;

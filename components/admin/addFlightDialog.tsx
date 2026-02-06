@@ -1,95 +1,128 @@
 'use client';
+
 import * as React from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
+    InputAdornment,
     TextField,
-    Button,
     Typography,
 } from '@mui/material';
-import Info from "@mui/icons-material/Info";
 import UiDialog from "@/components/uiDialog";
+import {DataRow} from "@/types/dataRow";
+import {AutocompleteDropdown} from "@/components/dropdown";
+import {fontWeight, Grid} from "@mui/system";
+import {manualGates, manualTerminals} from "@/components/util";
 
-
-interface ChangePasswordDialogProps {
+interface AddFlightDialogProps {
     open: boolean;
     onClose: () => void;
-    oldPassword: string;
-    onChangePassword: (newPassword: string) => void;
+    onAddFlight: (row: DataRow) => void;
 }
 
-const ChangePasswordDialog = ({
-                                  open,
-                                  onClose,
-                                  oldPassword,
-                                  onChangePassword,
-                              }: ChangePasswordDialogProps) => {
-    // const [oldPassword, setOldPassword] = React.useState('');
+const AddFlightDialog = ({
+                             open,
+                             onClose,
+                             onAddFlight,
+                         }: AddFlightDialogProps) => {
 
-    const [newPassword, setNewPassword] = React.useState('');
-    const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [airlineCode, setAirlineCode] = React.useState('');
+    const [flightNumber, setFlightNumber] = React.useState('');
+    const [terminal, setTerminal] = React.useState('');
+    const [newGate, setNewGate] = React.useState('');
+    const [flightId, setFlightId] = React.useState('');
     const [error, setError] = React.useState('');
 
-    const handlePasswordChange = () => {
-        if (oldPassword === newPassword) {
-            setError('Your new password must be different from your old password.');
+    const handleChange = () => {
+        if (airlineCode == '') {
+            setError('Airline Code is required');
             return;
         }
-        if (newPassword !== confirmPassword) {
-            setError('New password and confirm password do not match');
+        if (flightNumber == '') {
+            setError('Flight Number is required');
             return;
         }
-
-        // Password rules (example)
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-        if (!passwordRegex.test(newPassword)) {
-            setError(
-                'Password must be at least 6 characters with uppercase, lowercase, and number'
-            );
-            return;
+        if(newGate == '') {
+            setError('Gate is required');
+        }
+        if(terminal == '') {
+            setError('Terminal is required');
         }
 
         setError('');
-        onChangePassword(newPassword);
+        onAddFlight({
+            airlineCode: airlineCode,
+            flightNumber: flightNumber,
+        });
         onClose();
     };
 
+    let inputAdornment = <><InputAdornment
+        position="start"
+        sx={{bgcolor: 'rgba(109,184,236,0.8)', py: 0.1, px: 1, borderRadius: 1}}
+    >
+        <Typography color="error">Auto</Typography>
+    </InputAdornment></>;
     return (
         <UiDialog
             open={open}
-            onClose={onClose}
-            title="Change Password"
-            onConfirmCallback={handlePasswordChange}
+            onCancel={onClose}
+            title="Add Flight"
+            onConfirm={handleChange}
             cancelLabel={'Cancel'}
-            submitLabel={'Save Changes'}
+            confirmLabel={'Add'}
             content={
                 <>
-                    <Typography
-                        id="confirm-dialog-description"
-                        sx={{textDecorationLine: 'underline', display: 'flex', alignItems: 'center', gap: 1}}
-                    >
-                        <Info fontSize="small"/>
-                        Change the temporary password used during your first login
-                    </Typography>
                     <TextField
-                        label="New Password"
-                        type="password"
+                        label="Airline Name"
+                        type="text"
                         fullWidth
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        slotProps={{input: {id: 'new-password', autoFocus: true},}}
-                    />
-                    <TextField
-                        label="Confirm New Password"
-                        type="password"
-                        fullWidth
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        slotProps={{input: {id: 'confirm-new-password'}}}
+                        size="small"
+                        value={airlineCode}
+                        onChange={(e) => setAirlineCode(e.target.value)}
+                        slotProps={{input: {id: 'airline-code', autoFocus: true},}}
                     />
 
+                    <Grid container spacing={2}>
+                        <Grid size={{xs: 12, md: 6}}>
+                            <TextField
+                                label="Flight Number"
+                                type="text"
+                                fullWidth
+                                size="small"
+                                value={flightNumber}
+                                onChange={(e) => setFlightNumber(e.target.value)}
+                                slotProps={{
+                                    input: {
+                                        id: 'flight-number',
+                                        startAdornment: inputAdornment,
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid size={{xs: 12, md: 6}}>
+                            <TextField
+                                label="Flight ID"
+                                type="text"
+                                fullWidth
+                                size="small"
+                                value={flightId}
+                                onChange={(e) => setFlightId(e.target.value)}
+                                slotProps={{
+                                    input: {
+                                        id: 'flight-id',
+                                        startAdornment: inputAdornment,
+                                    },
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <AutocompleteDropdown
+                        label="Terminal" data={manualTerminals}
+                        onChange={(e) => setTerminal(e)}
+                    />
+                    <AutocompleteDropdown
+                        label="Gate Number" data={manualGates}
+                        onChange={(e) => setNewGate(e)}
+                    />
                     {error && (
                         <Typography color="error" variant="body2">
                             {error}
@@ -100,52 +133,5 @@ const ChangePasswordDialog = ({
     );
 }
 
-export default ChangePasswordDialog;
+export default AddFlightDialog;
 
-/*<Dialog
-            open={open}
-            onClose={onClose}
-            aria-labelledby="confirm-dialog-title"
-            aria-describedby="confirm-dialog-description"
-        >
-            <DialogTitle id="confirm-dialog-title" align="center">Change Password</DialogTitle>
-            <DialogContent sx={{display: 'flex', width: 460, flexDirection: 'column', gap: 2, mt: 1}}>
-                <Typography
-                    id="confirm-dialog-description"
-                    sx={{textDecorationLine: 'underline', display: 'flex', alignItems: 'center', gap: 1}}
-                >
-                    <Info fontSize="small"/>
-                    Change the temporary password used during your first login
-                </Typography>
-                <TextField
-                    label="New Password"
-                    type="password"
-                    fullWidth
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    slotProps={{input: {id: 'new-password', autoFocus: true},}}
-                />
-                <TextField
-                    label="Confirm New Password"
-                    type="password"
-                    fullWidth
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    slotProps={{input: {id: 'confirm-new-password'}}}
-                />
-
-                {error && (
-                    <Typography color="error" variant="body2">
-                        {error}
-                    </Typography>
-                )}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="inherit">
-                    Cancel
-                </Button>
-                <Button onClick={handleSubmit} variant="contained" color="primary" sx={{textTransform: 'none'}}>
-                    Save Changes
-                </Button>
-            </DialogActions>
-        </Dialog>*/

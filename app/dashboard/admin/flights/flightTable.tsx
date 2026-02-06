@@ -1,18 +1,28 @@
 'use client';
 
 import React from "react";
-import UITable, {TableRow} from "@/components/uiTable";
+import UITable from "@/components/uiTable";
 import {Button} from "@mui/material";
-import RemoveFlightDialog from "@/components/admin/removeFlightDialog";
-import {addFlight, removeFlight} from "@/actions/flight";
+import ConfirmEntityDialog from "@/components/confirmEntityDialog";
+import {addFlight, removeStaff} from "@/actions/endpoints";
+import AddFlightDialog from "@/components/admin/addFlightDialog";
+import {DataRow} from "@/types/dataRow";
 
 interface FlightTableProps {
- flightId: string;
- // onAddFlight: (flightId: string) => void;
+    flightId: string;
+    // onAddFlight: (flightId: string) => void;
 }
-const columns = ["airline", "flight", "terminal", "gate", "action"];
 
-const rows = [
+interface FlightRow extends DataRow {
+    airline: string;
+    flight: string;
+    terminal: string;
+    gate: string;
+    action: string;
+}
+
+const columns = ["airline", "flight", "terminal", "gate", "action"];
+const rows: FlightRow[] = [
     {
         airline: "AA",
         flight: "AA3245",
@@ -36,40 +46,60 @@ const rows = [
     }
 ];
 
-const FlightTable =  ({flightId}: FlightTableProps) => {
+const FlightTable = ({flightId}: FlightTableProps) => {
+    const [flightToRemove, setFlightToRemove] = React.useState<string | null>(null);
     const [isConfirm, setConfirm] = React.useState(false);
     const [isAdd, setIsAdd] = React.useState(false);
-    const handleOnRemove = async () => {
-        await removeFlight(flightId);
+
+
+    const handleOnRemove = async (proceed: boolean) => {
+        console.log('proceed', proceed);
+        await removeStaff(flightId);
         setConfirm(false); // UI state stays on client
     };
 
-    const handleAddFlight = async (row: TableRow) => {
-        await addFlight(row);
+    const handleAddFlight = async (row: DataRow) => {
+        const {airlineCode, flightNumber} = row;
+        console.log('Airline', flightNumber);
+        await addFlight(airlineCode);
     };
 
     return (
         <>
-            <UITable
+            <UITable<FlightRow>
                 columns={columns}
                 rows={rows}
                 title={`Flight Management ${flightId}`}
                 topButton={
-                    <Button variant="outlined" onClick={() => setIsAdd(true)}>
+                    <Button variant="outlined" sx={{textTransform:'none'}} onClick={() => setIsAdd(true)}>
                         Add Flight
                     </Button>
                 }
-                onCallback={handleAddFlight}
+                onActionCallback={(row: FlightRow) => {
+                    console.log('row', row.flight);
+                    setFlightToRemove(row.flight);
+                    setConfirm(true);
+                }}
             />
-            {
-                isConfirm && (<RemoveFlightDialog
-                    open={isConfirm}
-                    onClose={() => setConfirm(false)}
-                    flightId={flightId}
-                    onRemove={handleOnRemove}
-                />)
-            }
+            <ConfirmEntityDialog
+                open={isConfirm}
+                onClose={() => setConfirm(false)}
+                title="Remove Flight"
+                dataId={flightId}
+                message={
+                    <>
+                        Are you sure you want to remove <strong>Flight AA3245</strong> from the system?
+                    </>
+                }
+                onRemove={handleOnRemove}
+            />
+            {isAdd && (<AddFlightDialog
+                open={isAdd}
+                onClose={() => setIsAdd(false)}
+                onAddFlight={handleAddFlight}
+            />)}
         </>
     );
 }
+
 export default FlightTable;

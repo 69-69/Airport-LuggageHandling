@@ -1,9 +1,9 @@
 
-import PassengerTable from "@/app/dashboard/admin/passengers/passengerTable";
+import StaffTable from "@/app/dashboard/admin/staffs/staffTable";
 
-const Passengers = () => {
+const Staffs = () => {
     return (
-        <PassengerTable passengerId={"1"}/>
+        <StaffTable staffId={"1"}/>
     );
 }
-export default Passengers;
+export default Staffs;

@@ -2,38 +2,46 @@
 
 import React from "react";
 import UITable from "@/components/uiTable";
-import {Button} from "@mui/material";
-import RemoveEntityDialog from "@/components/admin/removeEntityDialog";
-import {addFlight, removeStaff} from "@/actions/flight";
+import {Box, Button, Typography} from "@mui/material";
+import ConfirmEntityDialog from "@/components/confirmEntityDialog";
+import {addFlight, removeStaff} from "@/actions/endpoints";
 import AddFlightDialog from "@/components/admin/addFlightDialog";
 import {DataRow} from "@/types/dataRow";
+import {useRouter} from "next/navigation";
 
 interface FlightTableProps {
     flightId: string;
     // onAddFlight: (flightId: string) => void;
 }
 
-interface FlightsRow extends DataRow {
+interface FlightRow extends DataRow {
     flight: string;
+    terminal:string;
     gate: string;
-    status: string;
+    totalPassengers: number;
+    action: string;
 }
 
-const columns = ["flight", "gate", "status"];
-const rows: FlightsRow[] = [
+const columns = ["flight", "terminal", "gate", "total passengers", "action"];
+const rows: FlightRow[] = [
     {
         flight: "AA3245",
+        terminal: "T3",
         gate: "G5",
-        status: "Boarding",
+        totalPassengers: 209,
+        action: "View Manifest",
     },
     {
         flight: "UA9868",
+        terminal: "T9",
         gate: "G9",
-        status: "Open",
+        totalPassengers: 699,
+        action: "View Manifest",
     },
 ];
 
-const TodayFlightTable = ({flightId}: FlightTableProps) => {
+const AirlineFlightsTable = ({flightId}: FlightTableProps) => {
+    const router = useRouter();
     const [isAdd, setIsAdd] = React.useState(false);
 
 
@@ -50,13 +58,17 @@ const TodayFlightTable = ({flightId}: FlightTableProps) => {
 
     return (
         <>
-            <UITable<FlightsRow>
+            <UITable<FlightRow>
                 columns={columns}
                 rows={rows}
-                // topButton={}
-                onActionCallback={(row: FlightsRow) => {
-                    console.log('row', row.flight);
-                }}
+                title='Airline Flight info'
+                topAlignment='center'
+                topButton={
+                    <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
+                        [ Current Flights ]
+                    </Typography>
+                }
+                onActionCallback={(row: FlightRow) => router.push(`/dashboard/airline/${row.flight}`)}
             />
             <AddFlightDialog
                 open={isAdd}
@@ -67,4 +79,4 @@ const TodayFlightTable = ({flightId}: FlightTableProps) => {
     );
 }
 
-export default TodayFlightTable;
+export default AirlineFlightsTable;

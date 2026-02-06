@@ -9,7 +9,6 @@ import {
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
-import {fontWeight, Grid} from "@mui/system";
 
 interface PostDialogProps {
     open: boolean;
@@ -49,12 +48,12 @@ const MessageDialog = ({
     return (
         <UiDialog
             open={open}
-            onClose={onClose}
+            onCancel={onClose}
             title="Post Message"
             confirmDisabled={error.length>0}
-            onConfirmCallback={handleChange}
+            onConfirm={handleChange}
             cancelLabel={'Cancel'}
-            submitLabel={'Send'}
+            confirmLabel={'Send Message'}
             content={
                 <>
                     <TextField
@@ -67,7 +66,10 @@ const MessageDialog = ({
                         onChange={(e) => setMessage(e.target.value)}
                         slotProps={{input: {id: 'message', autoFocus: true},}}
                     />
-                    <AutocompleteDropdown label="Recipient (Staffs)" data={staffs}/>
+                    <AutocompleteDropdown
+                        label="Recipient (Staffs)" data={staffs}
+                        onChange={(e) => setRecipient(e)}
+                    />
                     {error && (
                         <Typography color="error" variant="body2">
                             {error}

@@ -2,52 +2,50 @@
 
 import React, {useEffect} from "react";
 import UITable from "@/components/uiTable";
-import {Typography} from "@mui/material";
-import RemoveEntityDialog from "@/components/removeEntityDialog";
-import {addFlight, removeStaff} from "@/actions/flight";
+import {Button, Typography} from "@mui/material";
+import ConfirmEntityDialog from "@/components/confirmEntityDialog";
+import {addFlight, removeStaff} from "@/actions/endpoints";
 import AddFlightDialog from "@/components/admin/addFlightDialog";
 import {DataRow} from "@/types/dataRow";
 import {useParams} from "next/navigation";
+import MessageDialog from "@/components/postMessageDialog";
 
-interface CheckInRow extends DataRow {
-    name: string;
-    flight:string;
-    ticket:string;
+interface MessageRow extends DataRow {
+    id: string;
+    message: React.ReactNode;
     status: string;
     action: string;
 }
 
-const columns = ["name", "flight", "ticket", "status", "action"];
-const rows: CheckInRow[] = [
+const columns = ["message", "status", "action"];
+const rows: MessageRow[] = [
     {
-        name: "Mary M.",
-        flight: "AA3245",
-        ticket: "7352841936",
-        status: "Checked-in",
-        action: "Remove",
+        message: <><b>[ 05:40 AM ]</b> Security or bag issues visible <b>[ from: Gina ]</b></>,
+        id: "123",
+        status: 'Read',
+        action: "Delete"
     },
     {
-        name: "Dan IP",
-        flight: "AA3245",
-        ticket: "2349263712",
-        status: "Checked-in",
-        action: "Remove",
+        message: <><b>[ 01:40 PM ]</b> Missing passenger bag <b>[ from: Tina ]</b></>,
+        id: "321",
+        status: 'Unread',
+        action: "Delete"
     },
 ];
 
-const fetchFlightData = async (flight_id: string) => {
-    const res = await fetch(`/api/flights/${flight_id}`);
+const fetchMessages = async (flight_id: string) => {
+    const res = await fetch(`/api/message/${flight_id}`);
     if (!res.ok) throw new Error('Failed to fetch');
     return await res.json();
 };
 
-const CheckInsTable = () => {
+const MessageBoardTable = () => {
     const params = useParams();
     const flight_id = params?.flight_id as string;
 
     const [data, setData] = React.useState([]);
-    const [isAdd, setIsAdd] = React.useState<boolean>(false);
-    const [selectedRow, setSelectedRow] = React.useState<CheckInRow>();
+    const [openMsgDialog, setOpenMsgDialog] = React.useState<boolean>(false);
+    const [selectedRow, setSelectedRow] = React.useState<MessageRow>();
     const [isConfirm, setConfirm] = React.useState<boolean>(false);
 
     const handleOnRemove = async (proceed: boolean) => {
@@ -55,7 +53,7 @@ const CheckInsTable = () => {
         await removeStaff(flight_id);
     };
 
-    const handleAddFlight = async (row: DataRow) => {
+    const handlePostMessage = async (row: DataRow) => {
         const {airlineCode, flightNumber} = row;
         console.log('Flight', flightNumber);
         await addFlight(airlineCode);
@@ -64,7 +62,7 @@ const CheckInsTable = () => {
     useEffect(() => {
         if (!flight_id) return;
 
-        fetchFlightData(flight_id)
+        fetchMessages(flight_id)
             .then(setData)
             .catch(console.error);
     }, [flight_id]); // dependency array
@@ -72,41 +70,39 @@ const CheckInsTable = () => {
 
     return (
         <>
-            <UITable<CheckInRow>
+            <UITable<MessageRow>
                 columns={columns}
                 rows={rows}
-                title='Checked-in Passengers'
-                topAlignment='center'
+                title='Message Board'
                 topButton={
-                    <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
-                        [ Flight: AA3245 ]
-                    </Typography>
+                    <Button variant="outlined" sx={{textTransform: 'none'}} onClick={() => setOpenMsgDialog(true)}>
+                        Post Message
+                    </Button>
                 }
                 onActionCallback={(row) => {
                     setSelectedRow(row);
                     setConfirm(true);
                 }}
             />
-            <RemoveEntityDialog
+            <ConfirmEntityDialog
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
-                title="Undo Check-in"
-                flightId={flight_id}
+                title="Delete Message"
+                dataId={flight_id}
                 message={
                     <>
-                        This will remove<strong>{selectedRow?.name}</strong> from the check-in list for
-                        flight<strong>{selectedRow?.flight}.</strong> Do you want to continue?
+                        Are you sure you want to delete this message? Once deleted, recipient will no longer be able see it.
                     </>
                 }
                 onRemove={handleOnRemove}
             />
-            <AddFlightDialog
-                open={isAdd}
-                onClose={() => setIsAdd(false)}
-                onAddFlight={handleAddFlight}
+            <MessageDialog
+                open={openMsgDialog}
+                onClose={() => setOpenMsgDialog(false)}
+                onPost={handlePostMessage}
             />
         </>
     );
 }
 
-export default CheckInsTable;
+export default MessageBoardTable;

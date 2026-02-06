@@ -1,43 +1,47 @@
 'use client';
 import * as React from 'react';
 import {
+    InputAdornment,
     TextField,
     Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
+import {Grid} from "@mui/system";
+import Info from "@mui/icons-material/Info";
 
-interface AddFlightDialogProps {
+interface AddPassengerDialogProps {
     open: boolean;
     onClose: () => void;
-    onAddFlight: (row: DataRow) => void;
+    onAddPassenger: (row: DataRow) => void;
 }
 
-const AddFlightDialog = ({
-                             open,
-                             onClose,
-                             onAddFlight,
-                         }: AddFlightDialogProps) => {
+const AddPassengerDialog = ({
+                                open,
+                                onClose,
+                                onAddPassenger,
+                            }: AddPassengerDialogProps) => {
 
-    const [airlineCode, setAirlineCode] = React.useState('');
-    const [flightNumber, setFlightNumber] = React.useState('');
+    const [firstName, setFirstName] = React.useState('');
+    const [flight, setFlight] = React.useState('');
+    const [lastName, setLastName] = React.useState('');
     const [error, setError] = React.useState('');
 
-    const handlePasswordChange = () => {
-        if (airlineCode == '') {
-            setError('Airline Code is required');
+    const handleSubmit = () => {
+        if (firstName == '') {
+            setError('First name is required');
             return;
         }
-        if (flightNumber == '') {
-            setError('Flight Number is required');
+        if (lastName == '') {
+            setError('Last name is required');
             return;
         }
 
         setError('');
-        onAddFlight({
-            airlineCode: airlineCode,
-            flightNumber: flightNumber,
+        onAddPassenger({
+            firstName: firstName,
+            lastName: lastName,
         });
         onClose();
     };
@@ -45,33 +49,72 @@ const AddFlightDialog = ({
     return (
         <UiDialog
             open={open}
-            onClose={onClose}
-            title="Add Flight"
-            onConfirmCallback={handlePasswordChange}
+            onCancel={onClose}
+            title="Add Passenger"
+            onConfirm={handleSubmit}
             cancelLabel={'Cancel'}
-            submitLabel={'Add'}
+            confirmLabel={'Add'}
             content={
                 <>
+                    <Grid container spacing={2}>
+                        <Grid size={{xs: 12, md: 6}}>
+                            <TextField
+                                label="First Name"
+                                type="text"
+                                fullWidth
+                                size="small"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                slotProps={{input: {id: 'first-name'},}}
+                            />
+                        </Grid>
+                        <Grid size={{xs: 12, md: 6}}>
+                            <TextField
+                                label="Last Name"
+                                type="text"
+                                fullWidth
+                                size="small"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                slotProps={{input: {id: 'last-name'}}}
+                            />
+                        </Grid>
+                    </Grid>
                     <TextField
-                        label="Airline Code"
+                        label="ID Number"
                         type="text"
                         fullWidth
                         size="small"
-                        value={airlineCode}
-                        onChange={(e) => setAirlineCode(e.target.value)}
-                        slotProps={{input: {id: 'airline-code', autoFocus: true},}}
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        slotProps={{input: {id: 'id-number'}}}
+                        helperText="Passport or Driver License Number"
                     />
                     <TextField
-                        label="Flight Number"
+                        label="Ticket Number"
                         type="text"
                         fullWidth
                         size="small"
-                        value={flightNumber}
-                        onChange={(e) => setFlightNumber(e.target.value)}
-                        slotProps={{input: {id: 'flight-number'}}}
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        slotProps={{
+                            input: {
+                                id: 'ticket-number',
+                                startAdornment: (
+                                    <InputAdornment
+                                        position="start"
+                                        sx={{bgcolor: 'rgba(109,184,236,0.8)', py: 0.1, px: 1, borderRadius: 1}}
+                                    >
+                                        <Typography color="error">Auto</Typography>
+                                    </InputAdornment>
+                                ),
+                            },
+                        }}
                     />
-                    <AutocompleteDropdown label="Terminal" data={["T1", "T2", "T3"]}/>
-                    <AutocompleteDropdown label="Gate Number" data={["G1", "G2", "G3"]}/>
+                    <AutocompleteDropdown
+                        label="Flight" data={["AA1234", "AA4321", "AA9876"]}
+                        onChange={(e) => setFlight(e)}
+                    />
                     {error && (
                         <Typography color="error" variant="body2">
                             {error}
@@ -82,5 +125,5 @@ const AddFlightDialog = ({
     );
 }
 
-export default AddFlightDialog;
+export default AddPassengerDialog;
 

@@ -4,14 +4,14 @@ import React, {useEffect} from "react";
 import UITable from "@/components/uiTable";
 import {Typography} from "@mui/material";
 import ConfirmEntityDialog from "@/components/confirmEntityDialog";
-import {addFlight, removeStaff} from "@/actions/flight";
+import {addFlight, fetchOnBoardData, removeStaff} from "@/actions/endpoints";
 import {DataRow} from "@/types/dataRow";
 import {useParams} from "next/navigation";
 
 interface CheckInRow extends DataRow {
     name: string;
-    flight:string;
-    ticket:string;
+    flight: string;
+    ticket: string;
     status: string;
     action: string;
 }
@@ -34,13 +34,7 @@ const rows: CheckInRow[] = [
     },
 ];
 
-const fetchFlightData = async (flight_id: string) => {
-    const res = await fetch(`/api/flights/${flight_id}`);
-    if (!res.ok) throw new Error('Failed to fetch');
-    return await res.json();
-};
-
-const CheckInsTable = () => {
+const BoardedTable = () => {
     const params = useParams();
     const flight_id = params?.flight_id as string;
 
@@ -56,7 +50,7 @@ const CheckInsTable = () => {
     useEffect(() => {
         if (!flight_id) return;
 
-        fetchFlightData(flight_id)
+        fetchOnBoardData()
             .then(setData)
             .catch(console.error);
     }, [flight_id]); // dependency array
@@ -67,11 +61,11 @@ const CheckInsTable = () => {
             <UITable<CheckInRow>
                 columns={columns}
                 rows={rows}
-                title='Checked-in Passengers'
+                title='Onboard Manifest'
                 topAlignment='center'
                 topButton={
                     <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
-                        [ Flight: AA3245 ]
+                        [ Passengers onboard ]
                     </Typography>
                 }
                 onActionCallback={(row) => {
@@ -82,11 +76,11 @@ const CheckInsTable = () => {
             <ConfirmEntityDialog
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
-                title="Undo Check-in"
-                flightId={flight_id}
+                title="Undo Onboard"
+                dataId={flight_id}
                 message={
                     <>
-                        This will remove<strong>{selectedRow?.name}</strong> from the check-in list for
+                        This will remove<strong>{selectedRow?.name}</strong> from the onboard list for
                         flight<strong>{selectedRow?.flight}.</strong> Do you want to continue?
                     </>
                 }
@@ -96,4 +90,4 @@ const CheckInsTable = () => {
     );
 }
 
-export default CheckInsTable;
+export default BoardedTable;
