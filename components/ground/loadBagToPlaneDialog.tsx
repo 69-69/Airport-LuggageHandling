@@ -11,7 +11,7 @@ import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {
     bagLocations,
-    clearErrorAndSet, clearErrorAndSetString,
+    clearErrorAndSet, clearErrorAndSetString, isNumeric,
     statuses
 } from "@/components/util";
 
@@ -33,15 +33,17 @@ const LoadBagToPlaneDialog = ({
     const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (bagId == '') {
+        if (bagId.length < 6 || !isNumeric(bagId)) {
             setError('Bag ID is required');
             return;
         }
-        if(location == '') {
+        if(location.length < 2) {
             setError('Location is required');
+            return;
         }
-        if(passengerStatus == '') {
+        if(passengerStatus.length < 3) {
             setError('Passenger Status is required');
+            return;
         }
 
         setError('');
@@ -67,6 +69,7 @@ const LoadBagToPlaneDialog = ({
             title="Load Bags"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
+            confirmDisabled={!bagId || !location || !passengerStatus}
             confirmLabel={'Load Bags to Plane'}
             content={
                 <>
@@ -76,11 +79,13 @@ const LoadBagToPlaneDialog = ({
                         fullWidth
                         size="small"
                         value={bagId}
+                        disabled={bagId.length==6}
                         onChange={clearErrorAndSet(setBagId, setError)}
                         slotProps={{
                             input: {
                                 id: 'bag-id',
                                 startAdornment: inputAdornment,
+                                inputProps: {minLength: 6, maxLength: 6}
                             },
                         }}
                     />
@@ -94,11 +99,11 @@ const LoadBagToPlaneDialog = ({
                             SHOW: (Terminal and counter number)
                     */}
                     <AutocompleteDropdown
-                        label="Location" data={bagLocations}
+                        label="Location" data={[' ',...bagLocations]}
                         onChange={clearErrorAndSetString(setLocation, setError)}
                     />
                     <AutocompleteDropdown
-                        label="Passenger Status" data={statuses}
+                        label="Passenger Status" data={[' ',...statuses]}
                         onChange={clearErrorAndSetString(setPassengerStatus, setError)}
                     />
                     {error && (

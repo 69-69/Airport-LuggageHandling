@@ -7,6 +7,7 @@ import UITable from "@/components/uiTable";
 import {DataRow} from "@/types/dataRow";
 import LoadBagToPlaneDialog from "@/components/ground/loadBagToPlaneDialog";
 import MoveBagToGateDialog from "@/components/ground/moveBagToGateDialog";
+import ConfirmEntityDialog from "@/components/confirmEntityDialog";
 
 
 interface BagRow extends DataRow {
@@ -30,15 +31,20 @@ const rows: BagRow[] = [
 ];
 
 
-const WorkAtGateDashboard = () => {
+const WorkAtGateDashboard = ({lastName}: { lastName: string }) => {
+
+    const [selectedRow, setSelectedRow] = React.useState<DataRow>();
+    const [isConfirm, setConfirm] = React.useState<boolean>(false);
     const [isOpenBoard, setShowMoveDialog] = React.useState(false);
     const [openChangeGate, setShowLoadDialog] = React.useState(false);
 
 
     /// Move Bags To Gate Implementation
-    const onMoveBagToGate = (row: DataRow) => {
-        const {bagId, ticketNumber, newGate, terminal} = row;
-        console.log('Move Bags To Gate', bagId, ticketNumber, newGate, terminal);
+    const onMoveBagToGate = (isConfirm: boolean) => {
+        if (isConfirm) {
+            console.log('isConfirm', isConfirm, selectedRow?.bagId);
+            setConfirm(false);
+        }
     }
 
     /// Load Bags To Plane Implementation
@@ -53,7 +59,7 @@ const WorkAtGateDashboard = () => {
             {/*Active's Flight Info*/}
             <UITable<BagRow>
                 title='Gate Staff Dashboard'
-                name='Last name'
+                name={lastName}
                 columns={columns}
                 topAlignment='justify'
                 rows={rows}
@@ -105,7 +111,10 @@ const WorkAtGateDashboard = () => {
             {isOpenBoard && (<MoveBagToGateDialog
                 open={isOpenBoard}
                 onClose={() => setShowMoveDialog(false)}
-                onMoveBag={onMoveBagToGate}
+                onMoveBag={(row: DataRow) =>{
+                    setConfirm(true);
+                    setSelectedRow(row);
+                }}
             />)}
 
             {/*Load Bags To Plane Dialog*/}
@@ -114,6 +123,21 @@ const WorkAtGateDashboard = () => {
                 onClose={() => setShowLoadDialog(false)}
                 onLoadBag={onLoadBagToPlane}
             />)}
+
+            {/*Confirm Move Bags To Gate action*/}
+            <ConfirmEntityDialog
+                open={isConfirm}
+                onClose={() => setConfirm(false)}
+                title="Confirm Movement"
+                dataId={selectedRow?.flight?.toString() ?? ''}
+                message={
+                    <>
+                        Are you sure you want to move the bag with ID <b>{selectedRow?.bagId}?</b> to the new
+                        location?
+                    </>
+                }
+                onRemove={onMoveBagToGate}
+            />
         </>
     )
 }

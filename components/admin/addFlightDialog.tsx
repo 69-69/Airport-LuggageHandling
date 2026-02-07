@@ -10,7 +10,7 @@ import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
-import {clearErrorAndSet, clearErrorAndSetString, manualGates, manualTerminals} from "@/components/util";
+import {clearErrorAndSet, clearErrorAndSetString, isNumeric, manualGates, manualTerminals} from "@/components/util";
 
 interface AddFlightDialogProps {
     open: boolean;
@@ -24,7 +24,7 @@ const AddFlightDialog = ({
                              onAddFlight,
                          }: AddFlightDialogProps) => {
 
-    const [airlineCode, setAirlineCode] = React.useState('');
+    const [airlineName, setAirlineName] = React.useState('');
     const [flightNumber, setFlightNumber] = React.useState('');
     const [terminal, setTerminal] = React.useState('');
     const [newGate, setNewGate] = React.useState('');
@@ -32,29 +32,34 @@ const AddFlightDialog = ({
     const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (airlineCode == '') {
-            setError('Airline Code is required');
+        if (airlineName.length < 2) {
+            setError('Enter a valid airline name');
             return;
         }
-        if (flightId == '') {
+        if (!flightId || !isNumeric(flightId)) {
             setError('Flight ID is required');
             return;
         }
-        if (flightNumber == '') {
+        if (!flightNumber) {
             setError('Flight Number is required');
             return;
         }
-        if(newGate == '') {
+        if (newGate.length < 2) {
             setError('Gate is required');
+            return;
         }
-        if(terminal == '') {
+        if (terminal.length < 2) {
             setError('Terminal is required');
+            return;
         }
 
         setError('');
         onAddFlight({
-            airlineCode: airlineCode,
+            airlineName: airlineName,
             flightNumber: flightNumber,
+            flightId: flightId,
+            newGate: newGate,
+            terminal: terminal,
         });
         onClose();
     };
@@ -72,6 +77,7 @@ const AddFlightDialog = ({
             title="Add Flight"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
+            confirmDisabled={!airlineName || !flightId || !flightNumber || !newGate || !terminal}
             confirmLabel={'Add'}
             content={
                 <>
@@ -80,9 +86,9 @@ const AddFlightDialog = ({
                         type="text"
                         fullWidth
                         size="small"
-                        value={airlineCode}
-                        onChange={clearErrorAndSet(setAirlineCode, setError)}
-                        slotProps={{input: {id: 'airline-code', autoFocus: true},}}
+                        value={airlineName}
+                        onChange={clearErrorAndSet(setAirlineName, setError)}
+                        slotProps={{input: {id: 'airline-name', autoFocus: true},}}
                     />
 
                     <Grid container spacing={2}>
@@ -93,6 +99,7 @@ const AddFlightDialog = ({
                                 fullWidth
                                 size="small"
                                 value={flightId}
+                                disabled={flightId.length>0}
                                 onChange={clearErrorAndSet(setFlightId, setError)}
                                 slotProps={{
                                     input: {
@@ -109,6 +116,7 @@ const AddFlightDialog = ({
                                 fullWidth
                                 size="small"
                                 value={flightNumber}
+                                disabled={flightNumber.length>3}
                                 onChange={clearErrorAndSet(setFlightNumber, setError)}
                                 slotProps={{
                                     input: {
@@ -120,11 +128,11 @@ const AddFlightDialog = ({
                         </Grid>
                     </Grid>
                     <AutocompleteDropdown
-                        label="Terminal" data={manualTerminals}
+                        label="Terminal" data={[' ',...manualTerminals]}
                         onChange={clearErrorAndSetString(setTerminal, setError)}
                     />
                     <AutocompleteDropdown
-                        label="Gate Number" data={manualGates}
+                        label="Gate Number" data={[' ',...manualGates]}
                         onChange={clearErrorAndSetString(setNewGate, setError)}
                     />
                     {error && (

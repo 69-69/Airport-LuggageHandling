@@ -8,7 +8,7 @@ import {
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
-import {clearErrorAndSet, clearErrorAndSetString, numberOfBags} from "@/components/util";
+import {clearErrorAndSet, clearErrorAndSetString, isNumeric, numberOfBags} from "@/components/util";
 
 interface CheckInDialogProps {
     open: boolean;
@@ -17,21 +17,21 @@ interface CheckInDialogProps {
 }
 
 const CheckInDialog = ({
-                             open,
-                             onClose,
-                             onCheckIn,
-                         }: CheckInDialogProps) => {
+                           open,
+                           onClose,
+                           onCheckIn,
+                       }: CheckInDialogProps) => {
 
     const [ticketNumber, setTicketNumber] = React.useState('');
     const [numberBags, setNumberBags] = React.useState('');
-    const [error, setError] = React.useState<string|null>(null);
+    const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (ticketNumber == '') {
+        if (ticketNumber.length < 10 || !isNumeric(ticketNumber)) {
             setError('Ticket number is required');
             return;
         }
-        if (numberBags == '') {
+        if (!numberBags) {
             setError('Enter the number of bags');
             return;
         }
@@ -51,6 +51,7 @@ const CheckInDialog = ({
             title="Check In"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
+            confirmDisabled={!ticketNumber || !numberBags}
             confirmLabel={'Check-In'}
             content={
                 <>
@@ -61,7 +62,12 @@ const CheckInDialog = ({
                         size="small"
                         value={ticketNumber}
                         onChange={clearErrorAndSet(setTicketNumber, setError)}
-                        slotProps={{input: {id: 'ticket-number', autoFocus: true},}}
+                        slotProps={{
+                            input: {
+                                id: 'ticket-number', autoFocus: true,
+                                inputProps: {maxLength: 10, minLength: 10,}
+                            },
+                        }}
                     />
                     <AutocompleteDropdown
                         label="Number of Bags" data={numberOfBags}

@@ -10,7 +10,7 @@ import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
 import Info from "@mui/icons-material/Info";
-import {clearErrorAndSet, clearErrorAndSetString} from "@/components/util";
+import {clearErrorAndSet, clearErrorAndSetString, isNumeric, namePattern} from "@/components/util";
 
 interface AddPassengerDialogProps {
     open: boolean;
@@ -24,7 +24,7 @@ const AddPassengerDialog = ({
                                 onAddPassenger,
                             }: AddPassengerDialogProps) => {
 
-    const [flight, setFlight] = React.useState('');
+    const [flightNumber, setFlightNumber] = React.useState('');
     const [firstName, setFirstName] = React.useState('');
     const [lastName, setLastName] = React.useState('');
     const [ticketNumber, setTicketNumber] = React.useState('');
@@ -32,12 +32,25 @@ const AddPassengerDialog = ({
     const [error, setError] = React.useState<string | null>(null);
 
     const handleSubmit = () => {
-        if (firstName == '') {
-            setError('First name is required');
+
+        if (!namePattern.test(firstName)) {
+            setError('Enter a valid first name');
             return;
         }
-        if (lastName == '') {
-            setError('Last name is required');
+        if (!namePattern.test(lastName)) {
+            setError('Enter a valid last name');
+            return;
+        }
+        if (!flightNumber) {
+            setError('Flight Number is required');
+            return;
+        }
+        if (idNumber.length < 6 || !isNumeric(idNumber)) {
+            setError('Enter a valid ID number');
+            return;
+        }
+        if (ticketNumber.length < 10 || !isNumeric(ticketNumber)) {
+            setError('Ticket number is required');
             return;
         }
 
@@ -56,6 +69,7 @@ const AddPassengerDialog = ({
             title="Add Passenger"
             onConfirm={handleSubmit}
             cancelLabel={'Cancel'}
+            confirmDisabled={!firstName || !lastName || !flightNumber || !idNumber || !ticketNumber}
             confirmLabel={'Add'}
             content={
                 <>
@@ -91,7 +105,7 @@ const AddPassengerDialog = ({
                         value={idNumber}
                         onChange={clearErrorAndSet(setIdNumber, setError)}
                         slotProps={{
-                            input: {id: 'id-number', inputProps: {maxLength: 6}}
+                            input: {id: 'id-number', inputProps: {minLength: 6, maxLength: 6}}
                         }}
                         helperText="Passport or Driver License Number"
                     />
@@ -101,11 +115,12 @@ const AddPassengerDialog = ({
                         fullWidth
                         size="small"
                         value={ticketNumber}
+                        disabled={ticketNumber.length == 10}
                         onChange={clearErrorAndSet(setTicketNumber, setError)}
                         slotProps={{
                             input: {
                                 id: 'ticket-number',
-                                inputProps: {maxLength: 10},
+                                inputProps: {maxLength: 10,minLength: 10},
                                 startAdornment: (
                                     <InputAdornment
                                         position="start"
@@ -119,7 +134,7 @@ const AddPassengerDialog = ({
                     />
                     <AutocompleteDropdown
                         label="Flight" data={["AA1234", "AA4321", "AA9876"]}
-                        onChange={clearErrorAndSetString(setFlight, setError)}
+                        onChange={clearErrorAndSetString(setFlightNumber, setError)}
                     />
                     {error && (
                         <Typography color="error" variant="body2">

@@ -51,3 +51,10 @@ export const fetchOnBoardData = async () => {
     if (!res.ok) throw new Error('Failed to fetch');
     return await res.json();
 };
+
+export const fetchBaggage = async (flight_id: string) => {
+    const res = await fetch(`/api/baggage/${flight_id}`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    return await res.json();
+};
+

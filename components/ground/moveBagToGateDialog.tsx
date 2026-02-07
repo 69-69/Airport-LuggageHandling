@@ -10,7 +10,7 @@ import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
-import {clearErrorAndSet, clearErrorAndSetString, manualGates, manualTerminals} from "@/components/util";
+import {clearErrorAndSet, clearErrorAndSetString, isNumeric, manualGates, manualTerminals} from "@/components/util";
 
 interface MoveBagDialogProps {
     open: boolean;
@@ -19,10 +19,10 @@ interface MoveBagDialogProps {
 }
 
 const MoveBagToGateDialog = ({
-                             open,
-                             onClose,
-                             onMoveBag,
-                         }: MoveBagDialogProps) => {
+                                 open,
+                                 onClose,
+                                 onMoveBag,
+                             }: MoveBagDialogProps) => {
 
     const [ticketNumber, setTicketNumber] = React.useState('');
     const [terminal, setTerminal] = React.useState('');
@@ -31,22 +31,26 @@ const MoveBagToGateDialog = ({
     const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (bagId == '') {
-            setError('Bag ID is required');
+        if (bagId.length < 6 || !isNumeric(bagId)) {
+            setError('Enter valid bag ID');
             return;
         }
-        if (ticketNumber == '') {
-            setError('Flight Number is required');
+        if (ticketNumber.length < 6 || !isNumeric(ticketNumber)) {
+            setError('Enter valid ticket number');
             return;
         }
-        if(newGate == '') {
+        if (newGate.length < 2) {
             setError('Gate is required');
+            return;
         }
-        if(terminal == '') {
+        if (terminal.length < 2) {
             setError('Terminal is required');
+            return;
         }
+        console.log('terminal', terminal);
 
         setError('');
+
         onMoveBag({
             bagId: bagId,
             ticketNumber: ticketNumber,
@@ -63,25 +67,11 @@ const MoveBagToGateDialog = ({
             title="Move Bags"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
+            confirmDisabled={!bagId || !ticketNumber || !newGate || !terminal}
             confirmLabel={'Move Bags to Gate'}
             content={
                 <>
                     <Grid container spacing={2}>
-                        <Grid size={{xs: 12, md: 6}}>
-                            <TextField
-                                label="Ticket Number"
-                                type="text"
-                                fullWidth
-                                size="small"
-                                value={ticketNumber}
-                                onChange={clearErrorAndSet(setTicketNumber, setError)}
-                                slotProps={{
-                                    input: {
-                                        id: 'ticket-number',
-                                    },
-                                }}
-                            />
-                        </Grid>
                         <Grid size={{xs: 12, md: 6}}>
                             <TextField
                                 label="Bag ID"
@@ -93,17 +83,34 @@ const MoveBagToGateDialog = ({
                                 slotProps={{
                                     input: {
                                         id: 'bag-id',
+                                        inputProps: {minLength: 6, maxLength: 6}
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid size={{xs: 12, md: 6}}>
+                            <TextField
+                                label="Ticket Number"
+                                type="text"
+                                fullWidth
+                                size="small"
+                                value={ticketNumber}
+                                onChange={clearErrorAndSet(setTicketNumber, setError)}
+                                slotProps={{
+                                    input: {
+                                        id: 'ticket-number',
+                                        inputProps: {minLength: 10, maxLength: 10}
                                     },
                                 }}
                             />
                         </Grid>
                     </Grid>
                     <AutocompleteDropdown
-                        label="Terminal" data={manualTerminals}
+                        label="Terminal" data={[' ', ...manualTerminals]}
                         onChange={clearErrorAndSetString(setTerminal, setError)}
                     />
                     <AutocompleteDropdown
-                        label="Gate Number" data={manualGates}
+                        label="Gate Number" data={[' ', ...manualGates]}
                         onChange={clearErrorAndSetString(setNewGate, setError)}
                     />
                     {error && (

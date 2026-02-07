@@ -18,24 +18,24 @@ interface FlightRow extends DataRow {
     flight: string;
     terminal:string;
     gate: string;
-    totalPassengers: number;
+    passengers: number;
     action: string;
 }
 
-const columns = ["flight", "terminal", "gate", "total passengers", "action"];
+const columns = ["flight", "terminal", "gate", "passengers", "action"];
 const rows: FlightRow[] = [
     {
         flight: "AA3245",
         terminal: "T3",
         gate: "G5",
-        totalPassengers: 209,
+        passengers: 209,
         action: "View Manifest",
     },
     {
         flight: "UA9868",
         terminal: "T9",
         gate: "G9",
-        totalPassengers: 699,
+        passengers: 699,
         action: "View Manifest",
     },
 ];

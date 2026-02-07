@@ -26,6 +26,9 @@ const toCamelCase = (str: string) =>
         .replace(/[^a-z0-9 ]/g, '')
         .replace(/\s+(.)/g, (_, c) => c.toUpperCase());
 
+const toSentenceCase = (text: string): string =>
+    text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+
 const isNumeric = (value: unknown): boolean => {
     if (typeof value === 'number') {
         return !Number.isNaN(value);
@@ -61,8 +64,9 @@ const manualAirlines: string[] = [
     "UA - United Airlines"
 ];
 
+const namePattern = /^[a-zA-Z\s'-]+$/;
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
@@ -87,9 +91,11 @@ const numberOfBags: string[] = Array.from({length: 100}, (_, i) => i.toString())
 
 export {
     toCamelCase,
+    toSentenceCase,
     isNumeric,
     clearErrorAndSet,
     clearErrorAndSetString,
+    namePattern,
     emailRegex,
     passwordRegex,
     numberOfBags,

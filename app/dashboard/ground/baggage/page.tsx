@@ -5,10 +5,11 @@ import {useParams} from "next/navigation";
 import {DataRow} from "@/types/dataRow";
 import UITable from "@/components/uiTable";
 import {Grid, TextField, Typography} from "@mui/material";
+import {fetchBaggage} from "@/actions/endpoints";
 
 interface BaggageRow extends DataRow {
     bagId: string;
-    airline: React.ReactNode;
+    airline: string;
     ticket: string;
     location: string;
     weight: string;
@@ -16,7 +17,7 @@ interface BaggageRow extends DataRow {
 }
 
 const columns = ["bag id", "airline", "ticket", "location", "weight", "terminal"];
-const rows: BaggageRow[] = [
+let initialRows: BaggageRow[] = [
     {
         bagId: "123456",
         airline: "UA",
@@ -35,32 +36,50 @@ const rows: BaggageRow[] = [
     },
 ];
 
-const fetchBaggage = async (flight_id: string) => {
-    const res = await fetch(`/api/baggage/${flight_id}`);
-    if (!res.ok) throw new Error('Failed to fetch');
-    return await res.json();
-};
-
 const BaggageManifest = () => {
     const params = useParams();
     const flight_id = params?.flight_id as string;
-    const [data, setData] = React.useState([]);
-
+    const [rows, setRows] = React.useState<BaggageRow[]>(initialRows);
+    const [filteredRows, setFilteredRows] = React.useState<BaggageRow[]>(initialRows);
 
     useEffect(() => {
         if (!flight_id) return;
 
         fetchBaggage(flight_id)
-            .then(setData)
+            .then((remoteRows: BaggageRow[]) => {
+                if (remoteRows?.length) {
+                    setRows(remoteRows);
+                    setFilteredRows(remoteRows);
+                }
+            })
             .catch(console.error);
     }, [flight_id]); // dependency array
+
+    const filterBy = (term: string) => {
+        const searchTerm = term.toLowerCase().trim();
+
+        if (!searchTerm) {
+            setFilteredRows(rows);
+            return;
+        }
+
+        const filtered = initialRows.filter((row) =>
+            row.bagId.toLowerCase().includes(term) ||
+            row.airline?.toLowerCase().includes(term) ||
+            row.ticket.toLowerCase().includes(term) ||
+            row.location.toLowerCase().includes(term) ||
+            row.weight.toLowerCase().includes(term) ||
+            row.terminal?.toLowerCase().includes(term)
+        );
+        setFilteredRows(filtered);
+    }
 
 
     return (
         <>
             <UITable<BaggageRow>
                 columns={columns}
-                rows={rows}
+                rows={filteredRows}
                 title='Baggage Manifest'
                 topAlignment='justify'
                 topButton={
@@ -74,7 +93,12 @@ const BaggageManifest = () => {
                         </Grid>
                         <Grid size={{xs: 12, md: 3}}>
                             {/* Search/Filter */}
-                            <TextField size='small' placeholder='Search by bag id...' sx={{justifyContent: "end"}}/>
+                            <TextField
+                                size='small'
+                                sx={{justifyContent: "end"}}
+                                placeholder='Search by any ...'
+                                onChange={(e) => filterBy(e.target.value)}
+                            />
                         </Grid>
                     </Grid>
                 }

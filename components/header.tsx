@@ -5,25 +5,27 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import {UserRole} from "@/types/userRole";
-import {useRouter} from "next/navigation";
-import {toCamelCase} from "@/components/util";
+import {RoleEnum, UserRole} from "@/types/userRole";
+import {manualAirlines, toSentenceCase} from "@/components/util";
 
 interface HeaderProps {
     role?: UserRole;
     username?: string;
     accessLevel?: string;
     airlineCode?: string;
-    onLogout?: () => void;
+    onLogout?: (redirectPath?: string) => void;
 }
 
-const Header = ({username, role, onLogout, accessLevel}: HeaderProps) => {
-    const router = useRouter();
-
+const Header = ({username, role, airlineCode, onLogout, accessLevel}: HeaderProps) => {
+    let tagName: string;
+    if ((role as RoleEnum) == RoleEnum.PASSENGER && airlineCode){
+        tagName = manualAirlines.find(a=>a.startsWith(airlineCode)) ?? airlineCode;
+    }else{
+        tagName = role ?? '';
+    }
     const handleLogout = async () => {
         if (onLogout) {
-            onLogout();
-            router.push('/');
+            onLogout('/');
         }
     }
     return (
@@ -35,7 +37,7 @@ const Header = ({username, role, onLogout, accessLevel}: HeaderProps) => {
                 {username && (
                     <Box>
                         <Typography component="span" sx={{mr: 2}}>
-                            {role?.toUpperCase()} | {accessLevel && (accessLevel.toWellFormed() + ' | ')} {username.toWellFormed()}
+                            {tagName?.toUpperCase()} | {accessLevel && (toSentenceCase(accessLevel) + ' | ')} {toSentenceCase(username)}
                         </Typography>
                         <Button color="inherit" variant="outlined" size="small" sx={{textTransform: 'none'}}
                                 onClick={handleLogout}>

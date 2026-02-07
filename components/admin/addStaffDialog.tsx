@@ -8,7 +8,14 @@ import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
-import {clearErrorAndSet, clearErrorAndSetString, manualAirlines} from "@/components/util";
+import {
+    clearErrorAndSet,
+    clearErrorAndSetString,
+    emailRegex,
+    isNumeric,
+    manualAirlines,
+    namePattern
+} from "@/components/util";
 
 interface AddStaffDialogProps {
     open: boolean;
@@ -31,25 +38,39 @@ const AddStaffDialog = ({
     const [error, setError] = React.useState<string |null>(null);
 
     const handleSubmit = () => {
-        if (firstName == '') {
-            setError('First name is required');
+        if (!namePattern.test(firstName)) {
+            setError('Enter a valid first name');
             return;
         }
-        if (lastName == '') {
-            setError('Last name is required');
+        if (!namePattern.test(lastName)) {
+            setError('Enter a valid last name');
             return;
         }
-        if (role == '') {
+        if (!emailRegex.test(email)) {
+            setError('Enter valid email address');
+            return;
+        }
+        if (phone.length < 10 || !isNumeric(phone)) {
+            setError('Enter valid phone number');
+            return;
+        }
+        if (!role.trim() || role === ' ') {
             setError('Role is required');
+            return;
         }
-        if (airline == '') {
+        if (!airline.trim() || airline === ' ') {
             setError('Airline is required');
+            return;
         }
 
         setError('');
         onAddStaff({
             firstName: firstName,
             lastName: lastName,
+            role: role,
+            airline: airline,
+            email: email,
+            phone: phone,
         });
         onClose();
     };
@@ -61,6 +82,7 @@ const AddStaffDialog = ({
             title="Add Staff"
             onConfirm={handleSubmit}
             cancelLabel={'Cancel'}
+            confirmDisabled={!firstName || !lastName || !email || !phone || !role || !airline}
             confirmLabel={'Add'}
             content={
                 <>
@@ -103,16 +125,20 @@ const AddStaffDialog = ({
                         fullWidth
                         size="small"
                         value={phone}
-                        slotProps={{input: {id: 'phone'}}}
+                        slotProps={{
+                            input: {
+                                id: 'phone', inputProps:{maxLength:10}
+                            }
+                    }}
                         onChange={clearErrorAndSet(setPhone, setError)}
                     />
                     <AutocompleteDropdown
-                        label="Role" data={["Airline", "Gate", "Ground"]}
+                        label="Role" data={[' ',"Airline", "Gate", "Ground"]}
                         onChange={clearErrorAndSetString(setRole, setError)}
                     />
                     <AutocompleteDropdown
                         label="Airline"
-                        data={manualAirlines}
+                        data={[' ',...manualAirlines]}
                         onChange={clearErrorAndSetString(setAirline, setError)}
                     />
                     {error && (

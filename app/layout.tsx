@@ -13,6 +13,7 @@ import Box from "@mui/material/Box";
 import Sidebar from "@/components/sidebar";
 import {AuthProvider, useAuth} from "@/actions/authContext";
 import FullScreenLoader from "@/components/fullScreenLoader";
+import {RoleEnum} from "@/types/userRole";
 
 const roboto = Roboto({
     weight: ['300', '400', '500', '700'],
@@ -35,7 +36,7 @@ const user: {
 const AppShell = ({children}: { children: React.ReactNode }) => {
     const {user, logout, loading} = useAuth();
 
-    if (loading) return <FullScreenLoader />;
+    if (loading) return <FullScreenLoader/>;
 
     return (
         <>
@@ -43,8 +44,13 @@ const AppShell = ({children}: { children: React.ReactNode }) => {
                 {user ? ( // Authenticated Header
                     <>
                         <Header
-                            username={user.username}
+                            username={
+                                (user.role as RoleEnum) == RoleEnum.ADMIN
+                                    ? user.username
+                                    : user.lastName
+                            }
                             role={user.role}
+                            airlineCode={user.airlineCode}
                             accessLevel={user.accessLevel}
                             onLogout={logout}
                         />

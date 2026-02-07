@@ -30,15 +30,15 @@ const ChangeGateDialog = ({
     const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (terminal == '') {
-            setError('Terminal is required');
-            return;
-        }
-        if (newGate == '') {
-            setError('New gate is required');
-            return;
-        }
 
+        if (terminal.length < 2) {
+            setError('New Terminal is required');
+            return;
+        }
+        if (newGate.length < 2) {
+            setError('New Gate is required');
+            return;
+        }
         setError('');
         onChangeGate({
             terminal: terminal,
@@ -54,6 +54,7 @@ const ChangeGateDialog = ({
             title="Change Gate Information"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
+            confirmDisabled={!terminal || !newGate}
             confirmLabel={'Save Changes'}
             content={
                 <>
@@ -62,11 +63,11 @@ const ChangeGateDialog = ({
                         <b>Current Gate:</b> {oldGate}
                     </Typography>
                     <AutocompleteDropdown
-                        label="New Terminal" data={manualTerminals}
+                        label="New Terminal" data={[' ',...manualTerminals]}
                         onChange={clearErrorAndSetString(setTerminal, setError)}
                     />
                     <AutocompleteDropdown
-                        label="New Gate" data={manualGates}
+                        label="New Gate" data={[' ',...manualGates]}
                         onChange={clearErrorAndSetString(setNewGate, setError)}
                     />
                     {error && (

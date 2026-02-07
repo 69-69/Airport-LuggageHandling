@@ -35,7 +35,7 @@ const rows: ClearanceRow[] = [
     },
 ];
 
-const WorkAtClearanceDashboard = () => {
+const WorkAtClearanceDashboard = ({lastName}:{lastName: string}) => {
     const params = useParams();
     const flight_id = params?.flight_id as string;
 
@@ -70,7 +70,7 @@ const WorkAtClearanceDashboard = () => {
                 columns={columns}
                 rows={rows}
                 title='Security Clearance Dashboard'
-                name='Last name'
+                name={lastName}
                 topAlignment='center'
                 topButton={
                     <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>

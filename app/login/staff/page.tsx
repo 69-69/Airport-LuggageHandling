@@ -46,8 +46,10 @@ const StaffLoginForm = () => {
         // Fake backend response for now
         const userFromApi = {
             username,
+            firstName: 'Steve',
+            lastName: 'Anthony',
             role: RoleEnum.GROUND, // or 'ADMIN', 'GROUND', 'PASSENGER'.
-            airlineCode: 'UA',
+            airlineCode: 'AA',
         };
 
         login(userFromApi, true);

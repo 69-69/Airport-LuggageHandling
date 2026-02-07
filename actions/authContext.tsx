@@ -7,6 +7,8 @@ import {useRouter} from "next/navigation";
 type User = {
     role: UserRole;
     username: string;
+    firstName: string;
+    lastName: string;
     airlineCode?: string;
     accessLevel?: string; // Gate (G1, G2, etc) or Security Clearance
 };

@@ -17,7 +17,7 @@ const RoleGuard = ({allowedRoles, children}: RoleGuardProps) => {
     useEffect(() => {
         if (!loading) {
             if (!user) {
-                // Not logged in: redirect to login, preserve intended path
+                // Not logged in: redirect to `login`, preserve intended path
                 router.push(`/?redirect=${pathname}`);
                 return;
             }

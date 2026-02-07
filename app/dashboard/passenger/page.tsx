@@ -10,6 +10,8 @@ import MyBagDialog from "@/components/passenger/myBagDialog";
 import MyGateDialog from "@/components/passenger/myGateDialog";
 import {RoleEnum} from "@/types/userRole";
 import RoleGuard from "@/actions/roleGuard";
+import {useAuth} from "@/actions/authContext";
+import FullScreenLoader from "@/components/fullScreenLoader";
 
 
 interface SummaryRow extends DataRow {
@@ -68,6 +70,9 @@ const bagRows: MyBagRow[] = [
 const PassengerDashboard = () => {
     const [openMyBags, setMyBags] = React.useState(false);
     const  [openMyGate, setMyGate] = React.useState(false);
+    const {user, loading} = useAuth();
+
+    if (loading) return <FullScreenLoader/>;
 
 
     return (
@@ -77,7 +82,7 @@ const PassengerDashboard = () => {
             {/*Active's Flight Info*/}
             <UITable<SummaryRow>
                 title='Passenger Dashboard'
-                name='Last name'
+                name={user?.lastName}
                 columns={columns}
                 topAlignment='justify'
                 rows={rows}

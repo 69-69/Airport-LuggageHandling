@@ -6,7 +6,7 @@ import {
     Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
-import {clearErrorAndSet} from "@/components/util";
+import {clearErrorAndSet, isNumeric} from "@/components/util";
 
 interface ClearanceDialogProps {
     open: boolean;
@@ -24,8 +24,8 @@ const ClearanceDialog = ({
     const [error, setError] = React.useState<string | null>(null);
 
     const handleApprove = () => {
-        if (bagId == '') {
-            setError('Bag ID is required');
+        if (bagId.length < 6 || !isNumeric(bagId)) {
+            setError('Enter valid bag ID');
             return;
         }
         setError('');
@@ -34,8 +34,8 @@ const ClearanceDialog = ({
     };
 
     const handleFlag = () => {
-        if (bagId == '') {
-            setError('Bag ID is required');
+        if (bagId.length < 6 || !isNumeric(bagId)) {
+            setError('Enter valid bag ID');
             return;
         }
         setError('');
@@ -50,6 +50,7 @@ const ClearanceDialog = ({
             onOption={handleFlag}
             optionLabel={'Flag/Review'}
             onConfirm={handleApprove}
+            confirmDisabled={!bagId}
             confirmLabel={'Approve'}
             content={
                 <>
@@ -64,7 +65,7 @@ const ClearanceDialog = ({
                             input: {
                                 id: 'bag-id',
                                 autoFocus: true,
-                                inputProps: {maxLength: 6}
+                                inputProps: {maxLength: 6, minLength: 6}
                             }
                         }}
                     />

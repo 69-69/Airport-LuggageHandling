@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import {
-    InputAdornment,
     TextField,
     Typography,
 } from '@mui/material';
@@ -29,7 +28,7 @@ const MessageDialog = ({
     const staffs: string[] = ["Ella Brown", "Jackie M.", "IP Man"];
 
     const handleChange = () => {
-        if (message == '') {
+        if (message.length < 5) {
             setError('Message is required');
             return;
         }
@@ -69,7 +68,7 @@ const MessageDialog = ({
                             input: {
                                 id: 'message',
                                 autoFocus: true,
-                                inputProps: {maxLength: 200}
+                                inputProps: {maxLength: 200, minLength: 5}
                             },
                         }}
                     />

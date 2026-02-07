@@ -31,6 +31,8 @@ const PassengerLoginForm = () => {
         // Fake backend response for now
         const userFromApi = {
             username: 'steve',
+            firstName: 'Steve',
+            lastName: 'Tony',
             role: RoleEnum.PASSENGER, // or 'ADMIN', 'GROUND', 'PASSENGER'.
             airlineCode: 'UA',
         };

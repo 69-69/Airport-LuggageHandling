@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
-import {clearErrorAndSet} from "@/components/util";
+import {clearErrorAndSet, isNumeric} from "@/components/util";
 
 interface BoardDialogProps {
     open: boolean;
@@ -26,8 +26,8 @@ const BoardDialog = ({
     const [error, setError] = React.useState<string|null>(null);
 
     const handleChange = () => {
-        if (ticketNumber == '') {
-            setError('Ticket number is required');
+        if (ticketNumber.length < 10 || !isNumeric(ticketNumber)) {
+            setError('Enter a valid ticket number');
             return;
         }
         setError('');
@@ -44,6 +44,7 @@ const BoardDialog = ({
             title="Board Passenger"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
+            confirmDisabled={!ticketNumber || !isNumeric(ticketNumber)}
             confirmLabel={'Board Passenger'}
             content={
                 <>
@@ -54,7 +55,12 @@ const BoardDialog = ({
                         size="small"
                         value={ticketNumber}
                         onChange={clearErrorAndSet(setTicketNumber, setError)}
-                        slotProps={{input: {id: 'ticket-number', autoFocus: true},}}
+                        slotProps={{
+                            input: {
+                                id: 'ticket-number', autoFocus: true,
+                                inputProps:{minLength:10,maxLength:10}
+                            },
+                        }}
                     />
                     {error && (
                         <Typography color="error" variant="body2">

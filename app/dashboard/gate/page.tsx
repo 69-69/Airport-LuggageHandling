@@ -21,18 +21,18 @@ interface ActiveFlightRow extends DataRow {
     terminal: string;
     gate: string;
     status: string;
-    totalPassengers: number;
+    passengers: number;
     action: string;
 }
 
-const columns = ["flight", "terminal", "gate", "status", "total passengers", "action"];
+const columns = ["flight", "terminal", "gate", "status", "passengers", "action"];
 const rows: ActiveFlightRow[] = [
     {
         flight: "AA3245",
         terminal: "T5",
         gate: "G5",
         status: "Boarding",
-        totalPassengers: 234,
+        passengers: 234,
         action: "Change Gate"
     },
     {
@@ -40,7 +40,7 @@ const rows: ActiveFlightRow[] = [
         terminal: "T9",
         gate: "G9",
         status: "Open",
-        totalPassengers: 234,
+        passengers: 234,
         action: "Change Gate"
     },
 ];
@@ -79,13 +79,13 @@ const GateStaffDashboard = () => {
         if (isConfirm) {
             // @ TODO API integration here
             console.log('on boarding passenger with ticket Number:', ticketNumber);
+            setConfirm(false);
         }
     }
 
 
     /// Change Gate Implementation
     const handleChangeGate = (row: DataRow) => {
-        setConfirmChanges(true);
         setNewGate(row);
 
         const {ticketNumber, flightNumber} = row;
@@ -94,9 +94,11 @@ const GateStaffDashboard = () => {
 
     const onConfirmedGateChanges = (choice: boolean) => {
         console.log('Change Gate choice', choice);
+
         if (isConfirm) {
             // @ TODO API integration here
             console.log('Change Gate from:', newGate?.terminal, newGate?.newGate);
+            setConfirmChanges(false);
         }
     }
 
@@ -108,7 +110,7 @@ const GateStaffDashboard = () => {
             {/*Active's Flight Info*/}
             <UITable<ActiveFlightRow>
                 title='Gate Staff Dashboard'
-                name='Last name'
+                name={user?.lastName}
                 columns={columns}
                 topAlignment='justify'
                 rows={rows}
