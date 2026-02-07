@@ -25,7 +25,7 @@ const AdminDashboard = () => {
 
     return (
         <RoleGuard allowedRoles={[RoleEnum.ADMIN]}>
-            <Box component="section" sx={{p: 2, width: {xs: '100%', sm: '80%', md: '80%',}}}>
+            <Box component="section" sx={{p: 2, ml: {md:40}, width: {xs: '100%', sm: '80%', md: '80%',}}}>
                 <PageTitleUpdater/>
 
                 {/* Page title */}

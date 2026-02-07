@@ -68,11 +68,7 @@ const StaffLoginForm = () => {
     }
 
     return (
-        <Box
-            sx={{
-                minWidth: {xs: '90%', sm: 400},
-            }}
-        >
+        <Box sx={{minWidth: {xs: '90%', sm: 400}}}>
             <Paper sx={{
                 p: 4, width: '100%',
                 border: '1px dashed grey',

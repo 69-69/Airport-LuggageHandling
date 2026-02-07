@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
 import {useSearchParams} from 'next/navigation';
-import {dashboardRedirectPath, RoleEnum} from "@/types/userRole";
+import {dashboardRedirectPath, RoleEnum, securityClearance} from "@/types/userRole";
 import {useAuth} from "@/actions/authContext";
 
 interface WorkPrefDialogProps {
@@ -28,7 +28,7 @@ const WorkPreferenceDialog = ({
         if (user) {
             const updatedUser = {
                 ...user,
-                accessLevel: 'security' // Security Clearance is Selected
+                accessLevel: securityClearance // Security Clearance is Selected
             }
 
             // persist updated user

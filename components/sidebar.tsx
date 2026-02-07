@@ -8,9 +8,8 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import {usePathname, useRouter} from 'next/navigation';
-import {UserRole} from '@/components/header';
 import {useTheme, useMediaQuery, Box, Toolbar} from '@mui/material';
-import Button from "@mui/material/Button";
+import {UserRole} from "@/types/userRole";
 
 interface SidebarProps {
     role: UserRole;
@@ -36,7 +35,7 @@ const menuItemsByRole: Record<UserRole, { label: string; path: string }[]> = {
     ],
     GROUND: [ // Ground Staff
         {label: 'Dashboard', path: '/dashboard/ground'},
-        {label: 'Baggage Manifest', path: '/dashboard/ground/bag_handling'},
+        {label: 'Baggage Manifest', path: '/dashboard/ground/baggage'},
         {label: 'Message Board', path: '/dashboard/ground/messages'},
     ],
     PASSENGER: [],

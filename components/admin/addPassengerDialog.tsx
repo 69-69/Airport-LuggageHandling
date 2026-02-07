@@ -10,6 +10,7 @@ import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
 import Info from "@mui/icons-material/Info";
+import {clearErrorAndSet, clearErrorAndSetString} from "@/components/util";
 
 interface AddPassengerDialogProps {
     open: boolean;
@@ -23,10 +24,12 @@ const AddPassengerDialog = ({
                                 onAddPassenger,
                             }: AddPassengerDialogProps) => {
 
-    const [firstName, setFirstName] = React.useState('');
     const [flight, setFlight] = React.useState('');
+    const [firstName, setFirstName] = React.useState('');
     const [lastName, setLastName] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [ticketNumber, setTicketNumber] = React.useState('');
+    const [idNumber, setIdNumber] = React.useState('');
+    const [error, setError] = React.useState<string | null>(null);
 
     const handleSubmit = () => {
         if (firstName == '') {
@@ -64,7 +67,7 @@ const AddPassengerDialog = ({
                                 fullWidth
                                 size="small"
                                 value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
+                                onChange={clearErrorAndSet(setFirstName, setError)}
                                 slotProps={{input: {id: 'first-name'},}}
                             />
                         </Grid>
@@ -75,7 +78,7 @@ const AddPassengerDialog = ({
                                 fullWidth
                                 size="small"
                                 value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
+                                onChange={clearErrorAndSet(setLastName, setError)}
                                 slotProps={{input: {id: 'last-name'}}}
                             />
                         </Grid>
@@ -85,9 +88,11 @@ const AddPassengerDialog = ({
                         type="text"
                         fullWidth
                         size="small"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        slotProps={{input: {id: 'id-number'}}}
+                        value={idNumber}
+                        onChange={clearErrorAndSet(setIdNumber, setError)}
+                        slotProps={{
+                            input: {id: 'id-number', inputProps: {maxLength: 6}}
+                        }}
                         helperText="Passport or Driver License Number"
                     />
                     <TextField
@@ -95,11 +100,12 @@ const AddPassengerDialog = ({
                         type="text"
                         fullWidth
                         size="small"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        value={ticketNumber}
+                        onChange={clearErrorAndSet(setTicketNumber, setError)}
                         slotProps={{
                             input: {
                                 id: 'ticket-number',
+                                inputProps: {maxLength: 10},
                                 startAdornment: (
                                     <InputAdornment
                                         position="start"
@@ -113,7 +119,7 @@ const AddPassengerDialog = ({
                     />
                     <AutocompleteDropdown
                         label="Flight" data={["AA1234", "AA4321", "AA9876"]}
-                        onChange={(e) => setFlight(e)}
+                        onChange={clearErrorAndSetString(setFlight, setError)}
                     />
                     {error && (
                         <Typography color="error" variant="body2">

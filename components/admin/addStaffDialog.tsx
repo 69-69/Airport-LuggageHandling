@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
 import {
-    InputAdornment,
     TextField,
     Typography,
 } from '@mui/material';
@@ -9,7 +8,7 @@ import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
-import Info from "@mui/icons-material/Info";
+import {clearErrorAndSet, clearErrorAndSetString, manualAirlines} from "@/components/util";
 
 interface AddStaffDialogProps {
     open: boolean;
@@ -27,7 +26,9 @@ const AddStaffDialog = ({
     const [lastName, setLastName] = React.useState('');
     const [role, setRole] = React.useState('');
     const [airline, setAirline] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [email, setEmail] = React.useState('');
+    const [phone, setPhone] = React.useState('');
+    const [error, setError] = React.useState<string |null>(null);
 
     const handleSubmit = () => {
         if (firstName == '') {
@@ -71,7 +72,7 @@ const AddStaffDialog = ({
                                 fullWidth
                                 size="small"
                                 value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
+                                onChange={clearErrorAndSet(setFirstName, setError)}
                                 slotProps={{input: {id: 'first-name'},}}
                             />
                         </Grid>
@@ -82,7 +83,7 @@ const AddStaffDialog = ({
                                 fullWidth
                                 size="small"
                                 value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
+                                onChange={clearErrorAndSet(setLastName, setError)}
                                 slotProps={{input: {id: 'last-name'}}}
                             />
                         </Grid>
@@ -92,8 +93,8 @@ const AddStaffDialog = ({
                         type="email"
                         fullWidth
                         size="small"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        value={email}
+                        onChange={clearErrorAndSet(setEmail, setError)}
                         slotProps={{input: {id: 'email'}}}
                     />
                     <TextField
@@ -101,18 +102,18 @@ const AddStaffDialog = ({
                         type="phone"
                         fullWidth
                         size="small"
-                        value={lastName}
+                        value={phone}
                         slotProps={{input: {id: 'phone'}}}
-                        onChange={(e) => setLastName(e.target.value)}
+                        onChange={clearErrorAndSet(setPhone, setError)}
                     />
                     <AutocompleteDropdown
                         label="Role" data={["Airline", "Gate", "Ground"]}
-                        onChange={(value) => setRole(value)}
+                        onChange={clearErrorAndSetString(setRole, setError)}
                     />
                     <AutocompleteDropdown
                         label="Airline"
-                        data={["AA - America Airline", "SA - South Africa", "UA - United Emirates"]}
-                        onChange={(value) => setAirline(value)}
+                        data={manualAirlines}
+                        onChange={clearErrorAndSetString(setAirline, setError)}
                     />
                     {error && (
                         <Typography color="error" variant="body2">

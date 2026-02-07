@@ -2,7 +2,7 @@
 
 import React from 'react';
 import PageTitleUpdater from "@/components/pageTitleUpdater";
-import {RoleEnum} from "@/types/userRole";
+import {RoleEnum, securityClearance} from "@/types/userRole";
 import RoleGuard from "@/actions/roleGuard";
 import WorkAtClearanceDashboard from "@/app/dashboard/ground/work_at_clearance";
 import {useAuth} from "@/actions/authContext";
@@ -20,7 +20,7 @@ const GroundDashboard = () => {
             <PageTitleUpdater/>
 
             {/*Switch between Pages */}
-            {user?.accessLevel === 'security'
+            {user?.accessLevel === securityClearance
                 ? <WorkAtClearanceDashboard />
                 : <WorkAtGateDashboard />}
         </RoleGuard>

@@ -1,3 +1,5 @@
+export const securityClearance = 'security';
+
 export enum RoleEnum {
     ADMIN = 'ADMIN',
     AIRLINE = 'AIRLINE',

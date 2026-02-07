@@ -8,7 +8,7 @@ import {
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
-import {numberOfBags} from "@/components/util";
+import {clearErrorAndSet, clearErrorAndSetString, numberOfBags} from "@/components/util";
 
 interface CheckInDialogProps {
     open: boolean;
@@ -24,7 +24,7 @@ const CheckInDialog = ({
 
     const [ticketNumber, setTicketNumber] = React.useState('');
     const [numberBags, setNumberBags] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [error, setError] = React.useState<string|null>(null);
 
     const handleChange = () => {
         if (ticketNumber == '') {
@@ -60,12 +60,12 @@ const CheckInDialog = ({
                         fullWidth
                         size="small"
                         value={ticketNumber}
-                        onChange={(e) => setTicketNumber(e.target.value)}
+                        onChange={clearErrorAndSet(setTicketNumber, setError)}
                         slotProps={{input: {id: 'ticket-number', autoFocus: true},}}
                     />
                     <AutocompleteDropdown
                         label="Number of Bags" data={numberOfBags}
-                        onChange={(e) => setNumberBags(e)}
+                        onChange={clearErrorAndSetString(setNumberBags, setError)}
                     />
                     {error && (
                         <Typography color="error" variant="body2">

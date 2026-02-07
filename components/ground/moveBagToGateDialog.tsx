@@ -12,35 +12,30 @@ import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
 import {clearErrorAndSet, clearErrorAndSetString, manualGates, manualTerminals} from "@/components/util";
 
-interface AddFlightDialogProps {
+interface MoveBagDialogProps {
     open: boolean;
     onClose: () => void;
-    onAddFlight: (row: DataRow) => void;
+    onMoveBag: (row: DataRow) => void;
 }
 
-const AddFlightDialog = ({
+const MoveBagToGateDialog = ({
                              open,
                              onClose,
-                             onAddFlight,
-                         }: AddFlightDialogProps) => {
+                             onMoveBag,
+                         }: MoveBagDialogProps) => {
 
-    const [airlineCode, setAirlineCode] = React.useState('');
-    const [flightNumber, setFlightNumber] = React.useState('');
+    const [ticketNumber, setTicketNumber] = React.useState('');
     const [terminal, setTerminal] = React.useState('');
     const [newGate, setNewGate] = React.useState('');
-    const [flightId, setFlightId] = React.useState('');
+    const [bagId, setBagId] = React.useState('');
     const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (airlineCode == '') {
-            setError('Airline Code is required');
+        if (bagId == '') {
+            setError('Bag ID is required');
             return;
         }
-        if (flightId == '') {
-            setError('Flight ID is required');
-            return;
-        }
-        if (flightNumber == '') {
+        if (ticketNumber == '') {
             setError('Flight Number is required');
             return;
         }
@@ -52,68 +47,52 @@ const AddFlightDialog = ({
         }
 
         setError('');
-        onAddFlight({
-            airlineCode: airlineCode,
-            flightNumber: flightNumber,
+        onMoveBag({
+            bagId: bagId,
+            ticketNumber: ticketNumber,
+            newGate: newGate,
+            terminal: terminal,
         });
         onClose();
     };
 
-    let inputAdornment = <><InputAdornment
-        position="start"
-        sx={{bgcolor: 'rgba(109,184,236,0.8)', py: 0.1, px: 1, borderRadius: 1}}
-    >
-        <Typography color="error">Auto</Typography>
-    </InputAdornment></>;
     return (
         <UiDialog
             open={open}
             onCancel={onClose}
-            title="Add Flight"
+            title="Move Bags"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
-            confirmLabel={'Add'}
+            confirmLabel={'Move Bags to Gate'}
             content={
                 <>
-                    <TextField
-                        label="Airline Name"
-                        type="text"
-                        fullWidth
-                        size="small"
-                        value={airlineCode}
-                        onChange={clearErrorAndSet(setAirlineCode, setError)}
-                        slotProps={{input: {id: 'airline-code', autoFocus: true},}}
-                    />
-
                     <Grid container spacing={2}>
                         <Grid size={{xs: 12, md: 6}}>
                             <TextField
-                                label="Flight ID"
+                                label="Ticket Number"
                                 type="text"
                                 fullWidth
                                 size="small"
-                                value={flightId}
-                                onChange={clearErrorAndSet(setFlightId, setError)}
+                                value={ticketNumber}
+                                onChange={clearErrorAndSet(setTicketNumber, setError)}
                                 slotProps={{
                                     input: {
-                                        id: 'flight-id',
-                                        startAdornment: inputAdornment,
+                                        id: 'ticket-number',
                                     },
                                 }}
                             />
                         </Grid>
                         <Grid size={{xs: 12, md: 6}}>
                             <TextField
-                                label="Flight Number"
+                                label="Bag ID"
                                 type="text"
                                 fullWidth
                                 size="small"
-                                value={flightNumber}
-                                onChange={clearErrorAndSet(setFlightNumber, setError)}
+                                value={bagId}
+                                onChange={clearErrorAndSet(setBagId, setError)}
                                 slotProps={{
                                     input: {
-                                        id: 'flight-number',
-                                        startAdornment: inputAdornment,
+                                        id: 'bag-id',
                                     },
                                 }}
                             />
@@ -137,5 +116,5 @@ const AddFlightDialog = ({
     );
 }
 
-export default AddFlightDialog;
+export default MoveBagToGateDialog;
 

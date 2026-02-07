@@ -9,6 +9,7 @@ import {
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
+import {clearErrorAndSet} from "@/components/util";
 
 interface PostDialogProps {
     open: boolean;
@@ -17,14 +18,14 @@ interface PostDialogProps {
 }
 
 const MessageDialog = ({
-                             open,
-                             onClose,
-                             onPost,
-                         }: PostDialogProps) => {
+                           open,
+                           onClose,
+                           onPost,
+                       }: PostDialogProps) => {
 
     const [message, setMessage] = React.useState('');
     const [recipient, setRecipient] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [error, setError] = React.useState<string | null>(null);
     const staffs: string[] = ["Ella Brown", "Jackie M.", "IP Man"];
 
     const handleChange = () => {
@@ -50,7 +51,7 @@ const MessageDialog = ({
             open={open}
             onCancel={onClose}
             title="Post Message"
-            confirmDisabled={error.length>0}
+            confirmDisabled={(error?.length ?? 0) > 0}
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
             confirmLabel={'Send Message'}
@@ -63,8 +64,14 @@ const MessageDialog = ({
                         size="small"
                         rows={3}
                         value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        slotProps={{input: {id: 'message', autoFocus: true},}}
+                        onChange={clearErrorAndSet(setMessage, setError)}
+                        slotProps={{
+                            input: {
+                                id: 'message',
+                                autoFocus: true,
+                                inputProps: {maxLength: 200}
+                            },
+                        }}
                     />
                     <AutocompleteDropdown
                         label="Recipient (Staffs)" data={staffs}

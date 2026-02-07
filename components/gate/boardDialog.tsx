@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
+import {clearErrorAndSet} from "@/components/util";
 
 interface BoardDialogProps {
     open: boolean;
@@ -22,7 +23,7 @@ const BoardDialog = ({
                          }: BoardDialogProps) => {
 
     const [ticketNumber, setTicketNumber] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [error, setError] = React.useState<string|null>(null);
 
     const handleChange = () => {
         if (ticketNumber == '') {
@@ -52,7 +53,7 @@ const BoardDialog = ({
                         fullWidth
                         size="small"
                         value={ticketNumber}
-                        onChange={(e) => setTicketNumber(e.target.value)}
+                        onChange={clearErrorAndSet(setTicketNumber, setError)}
                         slotProps={{input: {id: 'ticket-number', autoFocus: true},}}
                     />
                     {error && (

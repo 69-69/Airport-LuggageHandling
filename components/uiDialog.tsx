@@ -5,11 +5,9 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField,
     Button,
-    Typography, Box,
+    Box,
 } from '@mui/material';
-import Info from "@mui/icons-material/Info";
 
 
 interface UIDialogProps {
@@ -62,7 +60,7 @@ const UiDialog = ({
                 <Box sx={{flexGrow: 1}}></Box>
                 {content}
             </DialogContent>
-            <DialogActions sx={{mx: 2}}>
+            <DialogActions sx={{mx: 2, my:1}}>
                 <Button onClick={onCancel} color="error" variant="outlined"
                         size="small" sx={{textTransform: 'none'}}>
                     {cancelLabel ?? 'No'}

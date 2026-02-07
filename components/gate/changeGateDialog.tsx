@@ -7,7 +7,7 @@ import {
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
-import {manualGates, manualTerminals} from "@/components/util";
+import {clearErrorAndSetString, manualGates, manualTerminals} from "@/components/util";
 
 interface ChangeGateDialogProps {
     open: boolean;
@@ -27,7 +27,7 @@ const ChangeGateDialog = ({
 
     const [terminal, setTerminal] = React.useState('');
     const [newGate, setNewGate] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [error, setError] = React.useState<string | null>(null);
 
     const handleChange = () => {
         if (terminal == '') {
@@ -63,11 +63,11 @@ const ChangeGateDialog = ({
                     </Typography>
                     <AutocompleteDropdown
                         label="New Terminal" data={manualTerminals}
-                        onChange={(e) => setTerminal(e)}
+                        onChange={clearErrorAndSetString(setTerminal, setError)}
                     />
                     <AutocompleteDropdown
                         label="New Gate" data={manualGates}
-                        onChange={(e) => setNewGate(e)}
+                        onChange={clearErrorAndSetString(setNewGate, setError)}
                     />
                     {error && (
                         <Typography color="error" variant="body2">
