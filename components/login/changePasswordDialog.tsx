@@ -1,40 +1,36 @@
 'use client';
 import * as React from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    Typography,
-} from '@mui/material';
+import {TextField, Typography,} from '@mui/material';
 import Info from "@mui/icons-material/Info";
 import UiDialog from "@/components/uiDialog";
-import {clearErrorAndSet, passwordRegex} from "@/components/util";
+import {clearErrorAndSet, passwordRegex} from "@/utils/util";
 
 
 interface ChangePasswordDialogProps {
     open: boolean;
     onClose: () => void;
-    oldPassword: string;
+    loginPassword: string;
     onChangePassword: (newPassword: string) => void;
 }
 
 const ChangePasswordDialog = ({
                                   open,
                                   onClose,
-                                  oldPassword,
+                                  loginPassword,
                                   onChangePassword,
                               }: ChangePasswordDialogProps) => {
-    // const [oldPassword, setOldPassword] = React.useState('');
 
+    const [oldPassword, setOldPassword] = React.useState('');
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
     const [error, setError] = React.useState<string | null>(null);
 
     const handlePasswordChange = () => {
-        if (oldPassword === newPassword) {
+        if (loginPassword !== oldPassword) {
+            setError('Current password is not valid');
+            return;
+        }
+        if (loginPassword === newPassword) {
             setError('Your new password must be different from your old password.');
             return;
         }
@@ -78,13 +74,22 @@ const ChangePasswordDialog = ({
                         Change the temporary password used during your first login
                     </Typography>
                     <TextField
+                        label="Current Password"
+                        type="password"
+                        fullWidth
+                        size="small"
+                        value={oldPassword}
+                        onChange={clearErrorAndSet(setOldPassword, setError)}
+                        slotProps={{input: {id: 'current-password'},}}
+                    />
+                    <TextField
                         label="New Password"
                         type="password"
                         fullWidth
                         size="small"
                         value={newPassword}
                         onChange={clearErrorAndSet(setNewPassword, setError)}
-                        slotProps={{input: {id: 'new-password', autoFocus: true},}}
+                        slotProps={{input: {id: 'new-password'},}}
                     />
                     <TextField
                         label="Confirm New Password"
@@ -108,50 +113,3 @@ const ChangePasswordDialog = ({
 
 export default ChangePasswordDialog;
 
-/*<Dialog
-            open={open}
-            onClose={onClose}
-            aria-labelledby="confirm-dialog-title"
-            aria-describedby="confirm-dialog-description"
-        >
-            <DialogTitle id="confirm-dialog-title" align="center">Change Password</DialogTitle>
-            <DialogContent sx={{display: 'flex', width: 460, flexDirection: 'column', gap: 2, mt: 1}}>
-                <Typography
-                    id="confirm-dialog-description"
-                    sx={{textDecorationLine: 'underline', display: 'flex', alignItems: 'center', gap: 1}}
-                >
-                    <Info fontSize="small"/>
-                    Change the temporary password used during your first login
-                </Typography>
-                <TextField
-                    label="New Password"
-                    type="password"
-                    fullWidth
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    slotProps={{input: {id: 'new-password', autoFocus: true},}}
-                />
-                <TextField
-                    label="Confirm New Password"
-                    type="password"
-                    fullWidth
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    slotProps={{input: {id: 'confirm-new-password'}}}
-                />
-
-                {error && (
-                    <Typography color="error" variant="body2">
-                        {error}
-                    </Typography>
-                )}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="inherit">
-                    Cancel
-                </Button>
-                <Button onClick={handleSubmit} variant="contained" color="primary" sx={{textTransform: 'none'}}>
-                    Save Changes
-                </Button>
-            </DialogActions>
-        </Dialog>*/

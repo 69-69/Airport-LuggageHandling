@@ -1,14 +1,20 @@
 'use client';
 
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import UITable from "@/components/uiTable";
 import {Typography} from "@mui/material";
-import ConfirmEntityDialog from "@/components/confirmEntityDialog";
-import {addFlight, fetchOnBoardData, removeStaff} from "@/actions/endpoints";
 import {DataRow} from "@/types/dataRow";
-import {useParams} from "next/navigation";
+import {RoleEnum} from "@/types/userRole";
+import PageTitleUpdater from "@/components/pageTitleUpdater";
+import RoleGuard from "@/actions/roleGuard";
+import {Passenger, PassengerStatusEnum} from "@/types/models";
+import {passengerService} from "@/actions/services/passengerService";
+import {useAuth} from "@/actions/authContext";
+import FullScreenLoader from "@/components/fullScreenLoader";
+import {flightService} from "@/actions/services/flightService";
+import {toTitleCase} from "@/utils/util";
 
-interface CheckInRow extends DataRow {
+interface OnBoardRow extends DataRow {
     name: string;
     flight: string;
     ticket: string;
@@ -16,61 +22,63 @@ interface CheckInRow extends DataRow {
     // action: string;
 }
 
-const columns = ["name", "flight", "ticket", "status"];
-const rows: CheckInRow[] = [
-    {
-        name: "Mary M.",
-        flight: "AA3245",
-        ticket: "7352841936",
-        status: "onboard",
-        // action: "Remove",
-    },
-    {
-        name: "Dan IP",
-        flight: "AA3245",
-        ticket: "2349263712",
-        status: "onboard",
-        // action: "Remove",
-    },
-];
+const OnBoardTable = () => {
+    const {user, loading} = useAuth();
 
-const BoardedTable = () => {
-    const params = useParams();
-    const flight_id = params?.flight_id as string;
+    if (loading) {
+        return <FullScreenLoader/>
+    }
 
-    const [data, setData] = React.useState([]);
-    // const [selectedRow, setSelectedRow] = React.useState<CheckInRow>();
-    const [isConfirm, setConfirm] = React.useState<boolean>(false);
+    const [passengersRows, setPassengersRows] = useState<Passenger[]>([]);
 
-    /*const handleOnRemove = async (proceed: boolean) => {
-        console.log('proceed', proceed);
-        await removeStaff(flight_id);
-    };*/
+    // Fetch Passenger list
+    const fetchPassengers = () => {
+        try {
+            if (!user?.airline || !user?.accessLevel) return;
 
-    useEffect(() => {
-        if (!flight_id) return;
+            const airlineCode = user.airline.split(" - ")[0];
 
-        fetchOnBoardData()
-            .then(setData)
-            .catch(console.error);
-    }, [flight_id]); // dependency array
+            const flight = flightService.findByAirlineCodeAndGate(airlineCode, user.accessLevel);
 
+            if (!flight) return;
+
+            const res: Passenger[] = passengerService.findByFlightNumber(flight?.flightNumber)
+                .filter((p: Passenger) => p.status === PassengerStatusEnum.BOARDED);
+            setPassengersRows(res);
+        } catch (e) {
+            console.error("Error fetching staff rows:", e);
+        }
+    };
+
+    // Initial fetch
+    useEffect(() => fetchPassengers(), [user]);
 
     return (
-        <>
-            <UITable<CheckInRow>
-                columns={columns}
-                rows={rows}
+        <RoleGuard allowedRoles={[RoleEnum.GATE]}>
+            <PageTitleUpdater/>
+            <UITable<OnBoardRow>
+                columns={["name", "flight", "ticket", "status"]}
+                rows={(Array.isArray(passengersRows) ? passengersRows : []).map(p => (
+                    {
+                        name: toTitleCase(p.firstName + " " + p.lastName),
+                        flight: p.flightNumber,
+                        ticket: p.ticketNumber,
+                        status: p.status as string,
+                        // action: "Remove",
+                    }
+                )) as OnBoardRow[]}
                 title='Onboard Manifest'
                 topAlignment='center'
                 topButton={
-                    <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
-                        [ Passengers onboard ]
-                    </Typography>
+                    passengersRows.length > 0 ? (
+                        <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
+                            [ Passengers onboard ]
+                        </Typography>
+                    ) : null
                 }
                 onActionCallback={(row) => {
                     // setSelectedRow(row);
-                    setConfirm(true);
+                    // setConfirm(true);
                 }}
             />
             {/*<ConfirmEntityDialog
@@ -86,8 +94,8 @@ const BoardedTable = () => {
                 }
                 onRemove={handleOnRemove}
             />*/}
-        </>
+        </RoleGuard>
     );
 }
 
-export default BoardedTable;
+export default OnBoardTable;

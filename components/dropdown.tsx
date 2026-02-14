@@ -8,6 +8,7 @@ interface DropdownItem {
     label: string;
     onClick: () => void;
 }
+
 interface DropdownMenuProps {
     items: string[]; // list of menu item labels
     onItemClick?: (label: string) => void; // optional callback
@@ -28,7 +29,7 @@ interface DropdownMenuProps {
         },
     },
 ]} />*/
-export const Dropdown =({items}: { items: DropdownItem[] })=> {
+export const Dropdown = ({items}: { items: DropdownItem[] }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     return (
@@ -114,17 +115,29 @@ export const DropdownMenu = ({
 };
 
 export const AutocompleteDropdown = (
-    {label, data, onChange}: { label: string, data: string[], onChange:(value: string) => void }
-) => {
+    {label, data, onChange, value, helperText}: {
+        label: string;
+        data: string[];
+        value: string;
+        helperText?: string;
+        onChange: (value: string) => void;
+    }) => {
     return (
         <Autocomplete
-            options={data}
-            onChange={(event, value) => {
-                if (value !== null) onChange(value ?? '');
-            }}
+            freeSolo
+            options={[
+                ...new Set(
+                    (Array.isArray(data) ? data : [])
+                        .map((a) => a)
+                        .filter(Boolean) // optional: removes empty/null values
+                )
+            ]}
+            value={value}  // Bind value to the state from the parent
+            onChange={(event, newValue) => onChange(newValue ?? '')}
+            onInputChange={(event, newInputValue) => onChange(newInputValue)}
             renderInput={(params) => (
-                <TextField {...params} label={label} size='small' />
+                <TextField {...params} label={label} helperText={helperText} size="small"/>
             )}
         />
     );
-}
+};

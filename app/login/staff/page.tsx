@@ -8,154 +8,171 @@ import WorkPreferenceDialog from "@/components/login/workPreferenceDialog";
 import GatePreferenceDialog from "@/components/login/gatePreferenceDialog";
 import {useAuth} from "@/actions/authContext";
 import {dashboardRedirectPath, RoleEnum} from "@/types/userRole";
-import {clearErrorAndSet, passwordRegex} from "@/components/util";
+import {clearErrorAndSet, passwordRegex} from "@/utils/util";
+import {authService} from "@/actions/services/authService";
+import {userService} from "@/actions/services/userService";
 
 const StaffLoginForm = () => {
-    const {login} = useAuth();
+    const {login, user} = useAuth(); // Get current user from AuthContext
 
     const router = useRouter();
-    const [error, setError] = useState<string | null>(null);
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const searchParams = useSearchParams();
-    const [showGatePref, setGatePref] = useState(false);
-    const [showWorkPref, setWorkPref] = useState(false);
-    const [showChangePassword, setShowChangePassword] = useState(false);
+        const [error, setError] = useState<string | null>(null);
+        const [username, setUsername] = useState('');
+        const [password, setPassword] = useState('');
+        const searchParams = useSearchParams();
+        const [showGatePref, setGatePref] = useState(false);
+        const [showWorkPref, setWorkPref] = useState(false);
+        const [showChangePassword, setShowChangePassword] = useState(false);
 
-    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
-        e.preventDefault();// redirect after login
+        const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+            e.preventDefault();// redirect after login
 
-        if(username.length < 4) {
-            setError("Please enter valid username");
-            return;
-        }
-        if (!passwordRegex.test(password)) {
-            setError(
-                'Password must be at least 6 characters with uppercase, lowercase, and number'
-            );
-            return;
-        }
-        setShowChangePassword(true); // show modal after login
-    };
+            if (username.length < 4) {
+                setError("Please enter valid username");
+                return;
+            }
+            if (!passwordRegex.test(password)) {
+                setError(
+                    'Password must be at least 6 characters with uppercase, lowercase, and number'
+                );
+                return;
+            }
 
-    const handleChangePassword = (newPassword: string) => {
 
-        console.log('User Auth:', {username, password, newPassword});
+            // Call authService
+            const result = authService.login(username, password);
 
-        // TODO: call backend API here
-        // Fake backend response for now
-        const userFromApi = {
-            username,
-            firstName: 'Steve',
-            lastName: 'Anthony',
-            role: RoleEnum.GROUND, // or 'ADMIN', 'GROUND', 'PASSENGER'.
-            airlineCode: 'AA',
+            if (!result.success) {
+                setError(result.error);
+                return;
+            }
+
+            // Login success → store in AuthContext
+            login(result.user, true);
+
+            // First login flow
+            if (result.user.firstLogin) {
+                setShowChangePassword(true);
+                return;
+            }
+
+            // Role-based redirect
+            const redirectPath =
+                searchParams.get("redirect") || dashboardRedirectPath({role: result.user.role});
+            router.push(redirectPath)
         };
 
-        login(userFromApi, true);
+        const handleChangePassword = (newPassword: string) => {
+            if (!user) return; // safety check
 
-        setShowChangePassword(false);
+            // Update user password in your localStorage backend
+            userService.updatePassword(user.username, newPassword, false);
 
-        /// Role-based flows
-        if (userFromApi.role === RoleEnum.GATE) {
-            setGatePref(true);
-            return;
-        }
-        if (userFromApi.role === RoleEnum.GROUND) {
-            setWorkPref(true);
-            return;
-        }
-        const redirectPath = searchParams.get('redirect') || dashboardRedirectPath({role: userFromApi.role});
-        router.push(redirectPath);
-    }
+            setShowChangePassword(false); // Close Change Password Dialog
 
-    return (
-        <Box sx={{minWidth: {xs: '90%', sm: 400}}}>
-            <Paper sx={{
-                p: 4, width: '100%',
-                border: '1px dashed grey',
-            }} elevation={3}>
-                <Typography variant="h5" sx={{mb: 3, textAlign: 'center'}}>
-                    Staff Login
-                </Typography>
-                <form onSubmit={handleSubmit}
-                      style={{
-                          width: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                      }}>
-                    <TextField
-                        label="Username"
-                        variant="outlined"
-                        size="small"
-                        fullWidth
-                        required
-                        sx={{mb: 2}}
-                        value={username}
-                        slotProps={{
-                            input: {id: 'username', autoFocus: true},
-                        }}
-                        onChange={clearErrorAndSet(setUsername, setError)}
-                    />
-                    <TextField
-                        label="Password"
-                        variant="outlined"
-                        type="password"
-                        size="small"
-                        fullWidth
-                        required
-                        sx={{mb: 3}}
-                        value={password}
-                        onChange={clearErrorAndSet(setPassword, setError)}
-                    />
-                    {error && (
-                        <Typography color="error" variant="body2" sx={{mb:1}}>
-                            {error}
-                        </Typography>
-                    )}
-                    <Button type="submit" variant="contained"
-                            color="primary" sx={{textTransform: 'none'}}
-                            disabled={!username || !password}
+            /// Role-based Work Preference
+            if (user.role === RoleEnum.GATE) {
+                setGatePref(true);
+                return;
+            }
+            if (user.role === RoleEnum.GROUND) {
+                setWorkPref(true);
+                return;
+            }
+
+            // Update AuthContext so UI reflects new password & firstLogin=false,
+            // then Redirect based on role
+            const redirectPath = dashboardRedirectPath({role: user.role});
+            login({...user, firstLogin: false}, true, redirectPath);
+        };
+
+
+        return (
+            <Box sx={{minWidth: {xs: '90%', sm: 400}}}>
+                <Paper sx={{
+                    p: 4, width: '100%',
+                    border: '1px dashed grey',
+                }} elevation={3}>
+                    <Typography variant="h5" sx={{mb: 3, textAlign: 'center'}}>
+                        Staff Login
+                    </Typography>
+                    <form onSubmit={handleSubmit}
+                          style={{
+                              width: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                          }}>
+                        <TextField
+                            label="Username"
+                            variant="outlined"
+                            size="small"
                             fullWidth
-                    >
-                        Login
-                    </Button>
-                    <Divider sx={{width: 200, my: 1}}>
-                        +
-                    </Divider>
-                    <Link href="/">Back</Link>
-                </form>
-            </Paper>
+                            required
+                            sx={{mb: 2}}
+                            value={username}
+                            slotProps={{
+                                input: {id: 'username', autoFocus: true},
+                            }}
+                            onChange={clearErrorAndSet(setUsername, setError)}
+                        />
+                        <TextField
+                            label="Password"
+                            variant="outlined"
+                            type="password"
+                            size="small"
+                            fullWidth
+                            required
+                            sx={{mb: 3}}
+                            value={password}
+                            onChange={clearErrorAndSet(setPassword, setError)}
+                        />
+                        {error && (
+                            <Typography color="error" variant="body2" sx={{mb: 1}}>
+                                {error}
+                            </Typography>
+                        )}
+                        <Button type="submit" variant="contained"
+                                color="primary" sx={{textTransform: 'none'}}
+                                disabled={!username || !password}
+                                fullWidth
+                        >
+                            Login
+                        </Button>
+                        <Divider sx={{width: 200, my: 1}}>+</Divider>
+                        <Link href="/">Back</Link>
+                    </form>
+                </Paper>
 
 
-            {showChangePassword && (<ChangePasswordDialog
-                open={showChangePassword}
-                oldPassword={password}
-                onClose={() => setShowChangePassword(false)}
-                onChangePassword={handleChangePassword}
-            />)}
+                {showChangePassword && (<ChangePasswordDialog
+                    open={showChangePassword}
+                    loginPassword={password}
+                    onClose={() => setShowChangePassword(false)}
+                    onChangePassword={handleChangePassword}
+                />)}
 
 
-            {/*WorkArea: Gate Preference Dialog*/}
-            {showGatePref && (<GatePreferenceDialog
-                open={showGatePref}
-                onClose={() => setGatePref(false)}
-            />)}
+                {/*WorkArea: Gate Preference Dialog*/}
+                {showGatePref && (<GatePreferenceDialog
+                    open={showGatePref}
+                    onClose={() => setGatePref(false)}
+                />)}
 
 
-            {/*WorkArea: Gate Preference Dialog*/}
-            {showWorkPref && (<WorkPreferenceDialog
-                open={showWorkPref}
-                onClose={() => setWorkPref(false)}
-                // If onGateSelected is TRUE, Show GatePreferenceDialog
-                onGateSelected={(v) => {
-                    setWorkPref(false);
-                    setGatePref(v);
-                }}
-            />)}
-        </Box>
-    );
-};
+                {/*WorkArea: Gate Preference Dialog*/}
+                {showWorkPref && (<WorkPreferenceDialog
+                    open={showWorkPref}
+                    onClose={() => setWorkPref(false)}
+                    // If onGateSelected is TRUE, Show GatePreferenceDialog
+                    onGateSelected={(v) => {
+                        setWorkPref(false);
+                        setGatePref(v);
+                    }}
+                />)}
+            </Box>
+        );
+    }
+;
 
 export default StaffLoginForm;

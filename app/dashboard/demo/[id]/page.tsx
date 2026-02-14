@@ -1,6 +1,4 @@
 
-import FlightTable from "@/app/dashboard/admin/flights/flightTable";
-
 const DemoWithID = async ({params}: { params: Promise<{ id: string }> }) => {
     const {id} = await params;
     console.log(id);

@@ -10,7 +10,7 @@ import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
-import {clearErrorAndSet, clearErrorAndSetString, isNumeric, manualGates, manualTerminals} from "@/components/util";
+import {clearErrorAndSet, clearErrorAndSetString, isNumeric, manualGates, manualTerminals} from "@/utils/util";
 
 interface MoveBagDialogProps {
     open: boolean;
@@ -107,10 +107,12 @@ const MoveBagToGateDialog = ({
                     </Grid>
                     <AutocompleteDropdown
                         label="Terminal" data={[' ', ...manualTerminals]}
+                        value={terminal}
                         onChange={clearErrorAndSetString(setTerminal, setError)}
                     />
                     <AutocompleteDropdown
                         label="Gate Number" data={[' ', ...manualGates]}
+                        value={newGate}
                         onChange={clearErrorAndSetString(setNewGate, setError)}
                     />
                     {error && (

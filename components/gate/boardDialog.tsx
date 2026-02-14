@@ -1,40 +1,40 @@
 'use client';
 
 import * as React from 'react';
-import {
-    InputAdornment,
-    TextField,
-    Typography,
-} from '@mui/material';
+import {Alert, TextField,} from '@mui/material';
 import UiDialog from "@/components/uiDialog";
-import {DataRow} from "@/types/dataRow";
-import {clearErrorAndSet, isNumeric} from "@/components/util";
+import {clearOutcomeError, getAirlineByCode, isNumeric, OutcomeProps, toTitleCase} from "@/utils/util";
+import {setOutcomeHelper, stripAlphabets} from "@/utils/validators";
+import {Passenger} from "@/types/models";
 
 interface BoardDialogProps {
     open: boolean;
     onClose: () => void;
-    onBoard: (row: DataRow) => void;
+    passenger: Passenger | undefined;
+    onBoard: (ticketNumber: string) => void;
+    outcome?: OutcomeProps; // the *current value* of the outcome
+    setOutcome: React.Dispatch<React.SetStateAction<OutcomeProps | undefined>>;
 }
 
+const _airlineName = (flight: string) => getAirlineByCode(stripAlphabets(flight));
+
 const BoardDialog = ({
-                             open,
-                             onClose,
-                             onBoard,
-                         }: BoardDialogProps) => {
-
+                         open,
+                         onClose,
+                         onBoard,
+                         outcome,
+                         setOutcome,
+                         passenger,
+                     }: BoardDialogProps) => {
     const [ticketNumber, setTicketNumber] = React.useState('');
-    const [error, setError] = React.useState<string|null>(null);
 
-    const handleChange = () => {
-        if (ticketNumber.length < 10 || !isNumeric(ticketNumber)) {
-            setError('Enter a valid ticket number');
-            return;
+    const handleSubmit = () => {
+        if (ticketNumber.length < 10) {
+            return setOutcomeHelper('error', 'Enter a valid ticket number', setOutcome);
         }
-        setError('');
-        onBoard({
-            ticketNumber: ticketNumber,
-        });
-        onClose();
+        // setOutcomeHelper('success', 'Passenger boarded!', setOutcome); // If everything is valid, set success message
+        onBoard(ticketNumber);
+        // onClose();
     };
 
     return (
@@ -42,10 +42,10 @@ const BoardDialog = ({
             open={open}
             onCancel={onClose}
             title="Board Passenger"
-            onConfirm={handleChange}
-            cancelLabel={'Cancel'}
+            onConfirm={handleSubmit}
+            cancelLabel='Cancel'
             confirmDisabled={!ticketNumber || !isNumeric(ticketNumber)}
-            confirmLabel={'Board Passenger'}
+            confirmLabel='Board Passenger'
             content={
                 <>
                     <TextField
@@ -54,18 +54,28 @@ const BoardDialog = ({
                         fullWidth
                         size="small"
                         value={ticketNumber}
-                        onChange={clearErrorAndSet(setTicketNumber, setError)}
+                        helperText="Ticket number can be up to 10 digits"
+                        onChange={clearOutcomeError(setTicketNumber, setOutcome)}
                         slotProps={{
                             input: {
                                 id: 'ticket-number', autoFocus: true,
-                                inputProps:{minLength:10,maxLength:10}
+                                inputProps: {minLength: 10, maxLength: 10}
                             },
                         }}
                     />
-                    {error && (
-                        <Typography color="error" variant="body2">
-                            {error}
-                        </Typography>
+                    {outcome && outcome.status !== undefined && (
+                        <Alert severity={outcome.status}>
+                            {outcome.message}
+
+                            {passenger && (
+                                <p>
+                                    <b>Name:</b> {toTitleCase(`${passenger?.firstName ?? ''} ${passenger?.lastName ?? ''}`)}<br/>
+                                    <b>Ticket:</b> {passenger?.ticketNumber ?? 'N/A'}<br/>
+                                    <b>Airline:</b> {_airlineName(passenger?.flightNumber ?? '')}<br/>
+                                    <b>Flight:</b> {passenger?.flightNumber?.toUpperCase() ?? 'N/A'}
+                                </p>
+                            )}
+                        </Alert>
                     )}
                 </>
             }/>

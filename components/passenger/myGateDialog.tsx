@@ -28,7 +28,7 @@ const MyGateDialog = <T extends DataRow>({
             cancelLabel='Cancel'
             confirmLabel='none'
             content={
-                <UITable<T> columns={columns} topAlignment='justify' rows={rows}/>
+                <UITable<T>  comp='span' columns={columns} topAlignment='justify' rows={rows}/>
             }/>
     );
 }

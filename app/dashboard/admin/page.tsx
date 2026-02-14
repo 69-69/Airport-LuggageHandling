@@ -5,29 +5,39 @@ import {Box, Button, Typography} from "@mui/material";
 import {Grid, Stack} from "@mui/system";
 import AddFlightDialog from "@/components/admin/addFlightDialog";
 import {DataRow} from "@/types/dataRow";
-import {addFlight} from "@/actions/endpoints";
+import {addStaff} from "@/actions/endpoints";
 import AddPassengerDialog from "@/components/admin/addPassengerDialog";
 import AddStaffDialog from "@/components/admin/addStaffDialog";
 import PageTitleUpdater from "@/components/pageTitleUpdater";
 import {RoleEnum} from "@/types/userRole";
 import RoleGuard from "@/actions/roleGuard";
+import {SendResult} from "@/types/models";
+import {OutcomeProps} from "@/utils/util";
 
 const AdminDashboard = () => {
+    const [outcome, setOutcome] = React.useState<OutcomeProps>();
     const [isOpenFlight, setOpenFlight] = React.useState(false);
     const [isOpenPassenger, setOpenPassenger] = React.useState(false);
     const [isOpenStaff, setOpenStaff] = React.useState(false);
 
-    const handleAddFlight = async (row: DataRow) => {
-        const {airlineCode, flightNumber} = row;
-        console.log('Airline', flightNumber);
-        await addFlight(airlineCode);
+    const handleAddStaff = async (row: DataRow) => {
+        const result: SendResult = await addStaff(row);
+
+        if (result.success) {
+            setOutcome({status: 'success', message: 'Staff added and email sent successfully',});
+            console.log("Staff added!");
+            // Clear the outcome
+            setOutcome(undefined);
+        } else {
+            setOutcome({status: 'error', message: result.error ?? ''});
+            console.log(result.error);
+        }
     };
 
     return (
         <RoleGuard allowedRoles={[RoleEnum.ADMIN]}>
-            <Box component="section" sx={{p: 2, ml: {md:40}, width: {xs: '100%', sm: '80%', md: '80%',}}}>
-                <PageTitleUpdater/>
-
+            <PageTitleUpdater/>
+            <Box component="section" sx={{p: 2, ml: {md: 40}, width: {xs: '100%', sm: '80%', md: '80%',}}}>
                 {/* Page title */}
                 <Typography variant="h4" component="h1" sx={{textAlign: 'center'}} gutterBottom>
                     Administrator Dashboard
@@ -50,7 +60,12 @@ const AdminDashboard = () => {
                         <Stack spacing={2} component="ul" sx={{listStyle: 'none', p: 0, m: 0}}>
                             {[
                                 {label: 'Add Flight', open: () => setOpenFlight(true)},
-                                {label: 'Add Passenger', open: () => setOpenPassenger(true)},
+                                {
+                                    label: 'Add Passenger', open: () => {
+                                        setOutcome({status: undefined, message: ''});
+                                        setOpenPassenger(true);
+                                    }
+                                },
                                 {label: 'Add Staff Account', open: () => setOpenStaff(true)},
                             ].map((action) => (
                                 <li key={action.label}>
@@ -105,20 +120,52 @@ const AdminDashboard = () => {
                 {isOpenFlight && (<AddFlightDialog
                     open={isOpenFlight}
                     onClose={() => setOpenFlight(false)}
-                    onAddFlight={handleAddFlight}
+                    // outcome={outcome}
+                    // setOutcome={setOutcome}
+                    // onAddFlight={handleAddFlight}
                 />)}
                 {isOpenPassenger && (<AddPassengerDialog
                     open={isOpenPassenger}
                     onClose={() => setOpenPassenger(false)}
-                    onAddPassenger={handleAddFlight}
+                    // outcome={outcome}
+                    // setOutcome={setOutcome}
+                    // onAddPassenger={handleAddPassenger}
                 />)}
                 {isOpenStaff && (<AddStaffDialog
                     open={isOpenStaff}
+                    outcome={outcome}
+                    setOutcome={setOutcome}
                     onClose={() => setOpenStaff(false)}
-                    onAddStaff={handleAddFlight}
+                    onAddStaff={handleAddStaff}
                 />)}
             </Box>
         </RoleGuard>
     )
 }
-export default AdminDashboard
+
+export default AdminDashboard;
+
+/*
+    const handleAddFlight = (row: DataRow) => {
+        const result: SendResult = addFlight(row);
+
+        if (result.success) {
+            setOutcome({status: 'success', message: 'Flight added successfully',});
+            console.log("Flight added!");
+        } else {
+            setOutcome({status: 'error', message: result.error ?? ''});
+            console.log(result.error);
+        }
+    };
+
+    const handleAddPassenger = (row: DataRow) => {
+        const result: SendResult = addPassenger(row);
+
+        if (result.success) {
+            setOutcome({status: 'success', message: 'Passenger added successfully',});
+            console.log("Passenger added!");
+        } else {
+            setOutcome({status: 'error', message: result.error ?? ''});
+            console.log(result.error);
+        }
+    };*/

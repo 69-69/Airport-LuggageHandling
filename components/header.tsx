@@ -5,24 +5,22 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import {RoleEnum, UserRole} from "@/types/userRole";
-import {manualAirlines, toSentenceCase} from "@/components/util";
+import {RoleEnum} from "@/types/userRole";
+import {getAirlineByCode, manualAirlines, toSentenceCase} from "@/utils/util";
+import {UserRole} from "@/types/models";
 
 interface HeaderProps {
     role?: UserRole;
     username?: string;
     accessLevel?: string;
-    airlineCode?: string;
+    airline?: string;
     onLogout?: (redirectPath?: string) => void;
 }
 
-const Header = ({username, role, airlineCode, onLogout, accessLevel}: HeaderProps) => {
-    let tagName: string;
-    if ((role as RoleEnum) == RoleEnum.PASSENGER && airlineCode){
-        tagName = manualAirlines.find(a=>a.startsWith(airlineCode)) ?? airlineCode;
-    }else{
-        tagName = role ?? '';
-    }
+const Header = ({username, role, airline, onLogout, accessLevel}: HeaderProps) => {
+    const tagName = (role as RoleEnum) !== RoleEnum.ADMIN && airline ? airline : role;
+    // tagName = manualAirlines.find(a=>a.startsWith(airlineCode)) ?? airlineCode;
+
     const handleLogout = async () => {
         if (onLogout) {
             onLogout('/');

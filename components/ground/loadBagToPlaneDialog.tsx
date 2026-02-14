@@ -13,7 +13,7 @@ import {
     bagLocations,
     clearErrorAndSet, clearErrorAndSetString, isNumeric,
     statuses
-} from "@/components/util";
+} from "@/utils/util";
 
 interface LoadBagDialogProps {
     open: boolean;
@@ -100,10 +100,12 @@ const LoadBagToPlaneDialog = ({
                     */}
                     <AutocompleteDropdown
                         label="Location" data={[' ',...bagLocations]}
+                        value={location}
                         onChange={clearErrorAndSetString(setLocation, setError)}
                     />
                     <AutocompleteDropdown
                         label="Passenger Status" data={[' ',...statuses]}
+                        value={passengerStatus}
                         onChange={clearErrorAndSetString(setPassengerStatus, setError)}
                     />
                     {error && (

@@ -1,0 +1,148 @@
+// actions/services/passengerService.ts
+
+import storageService from "@/actions/services/storageService";
+import {AuthResult, Flight, FlightSnapshot, Passenger, PassengerStatus, PassengerStatusEnum} from "@/types/models";
+
+const _KEY = "all_passengers";
+
+export const passengerService = {
+    getAll(): Passenger[] {
+        return storageService.get(_KEY, []);
+    },
+
+    add(passenger: Omit<Passenger, "status">): Passenger {
+        const passengers: Passenger[] = this.getAll();
+
+        if (passengers.some(p => p.ticketNumber === passenger.ticketNumber)) {
+            throw new Error(`Passenger with ticket ${passenger.ticketNumber} already exists`);
+        }
+
+        const newPassenger: Passenger = {
+            ...passenger,
+            status: "NOT_CHECKED_IN"
+        };
+
+        passengers.push(newPassenger);
+        storageService.set(_KEY, passengers);
+
+        return newPassenger;
+    },
+
+    findByTicketAndIdNumber(ticketNumber: string, idNumber: string): Passenger {
+        const passengers: Passenger[] = this.getAll();
+
+        const passenger = passengers.find(
+            p => p.ticketNumber === ticketNumber && p.idNumber === idNumber
+        );
+
+        if (!passenger) {
+            throw new Error(`Passenger with ticket ${ticketNumber} does not exist`);
+        }
+
+        return passenger;
+    },
+
+
+    findSnapshotById(idNumber: string): FlightSnapshot[] {
+        const passengers: Passenger[] = this.getAll();
+
+        // Filter all flights for this passenger
+        const flights = passengers.filter(p => p.idNumber === idNumber);
+
+        if (flights.length === 0) {
+            throw new Error(`Passenger with ID ${idNumber} does not exist`);
+        }
+
+        // Return flightNumber + ticketNumber
+        return flights.map(f => ({
+            flightNumber: f.flightNumber,
+            ticketNumber: f.ticketNumber,
+        }));
+    },
+
+    findByFlightNumber(flightNumber: string): Passenger[] {
+        const passengers: Passenger[] = this.getAll();
+
+        if (!passengers.length) {
+            return [];
+        }
+
+        return passengers.filter((p: Passenger) => p.flightNumber === flightNumber);
+    },
+
+    findByTicketNumber(ticketNumber: string): Passenger | undefined {
+        const passengers: Passenger[] = this.getAll();
+
+        return passengers.find((p: Passenger) => p.ticketNumber === ticketNumber);
+    },
+
+    login(ticketNumber: string, idNumber: string): AuthResult {
+        try {
+            const passenger = this.findByTicketAndIdNumber(ticketNumber, idNumber);
+
+            return {
+                success: true,
+                user: {
+                    role: passenger.role,
+                    username: passenger.idNumber,
+                    firstName: passenger.firstName,
+                    lastName: passenger.lastName,
+                    airline: passenger.flightNumber,
+                    accessLevel: 'Passenger',
+                    firstLogin: false
+                }
+            };
+        } catch (err) {
+            return { success: false, error: (err as Error).message };
+        }
+    },
+
+    updateStatus(ticketNumber: string, status: PassengerStatus): void {
+        const passengers = this.getAll();
+        const p = passengers.find(p => p.ticketNumber === ticketNumber);
+
+        if (!p) throw new Error("Passenger not found");
+
+        p.status = status;
+        storageService.set(_KEY, passengers);
+    },
+
+    checkIn(ticketNumber: string) {
+        const passengers = this.getAll();
+        const p = passengers.find(p => p.ticketNumber === ticketNumber);
+        if (!p) throw new Error("Passenger not found");
+
+        p.status = "CHECKED_IN";
+        storageService.set(_KEY, passengers);
+    },
+
+    board(ticketNumber: string): Passenger | undefined {
+        const passengers = this.getAll();
+        const p = passengers.find(p => p.ticketNumber === ticketNumber);
+
+        if (p?.status !== PassengerStatusEnum.CHECKED_IN) {
+            throw new Error("Passenger must be checked in");
+        }
+
+        p.status = "BOARDED";
+        storageService.set(_KEY, passengers);
+
+        return p;
+    },
+
+    remove(ticketNumber: string) {
+        storageService.set(
+            _KEY,
+            this.getAll().filter(u => u.ticketNumber !== ticketNumber)
+        );
+    },
+};
+
+/* USAGE: updateStatus
+try {
+  passengerService.updateStatus(ticket, "CHECKED_IN");
+  toast.success("Passenger checked in");
+} catch (e) {
+  toast.error(e.message);
+}
+*/

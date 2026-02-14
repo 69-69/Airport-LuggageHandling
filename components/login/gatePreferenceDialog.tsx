@@ -9,7 +9,7 @@ import {AutocompleteDropdown} from "@/components/dropdown";
 import {useSearchParams} from "next/navigation";
 import {dashboardRedirectPath} from "@/types/userRole";
 import {useAuth} from "@/actions/authContext";
-import {manualGates} from "@/components/util";
+import {manualGates} from "@/utils/util";
 
 interface GatePrefDialogProps {
     open: boolean;
@@ -69,6 +69,7 @@ const GatePreferenceDialog = ({
                     </Typography>
                     <AutocompleteDropdown
                         label="Gate Option" data={manualGates}
+                        value={newGate}
                         onChange={(e) => setNewGate(e)}
                     />
                     {error && (

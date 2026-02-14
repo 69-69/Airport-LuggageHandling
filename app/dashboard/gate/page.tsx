@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import PageTitleUpdater from "@/components/pageTitleUpdater";
 import {RoleEnum} from "@/types/userRole";
 import RoleGuard from "@/actions/roleGuard";
@@ -14,48 +14,55 @@ import BoardDialog from "@/components/gate/boardDialog";
 import ConfirmEntityDialog from "@/components/confirmEntityDialog";
 import ChangeGateDialog from "@/components/gate/changeGateDialog";
 import {DataRow} from "@/types/dataRow";
+import {Flight, MessageBoard, Passenger, UserRole} from "@/types/models";
+import {flightService} from "@/actions/services/flightService";
+import {OutcomeProps, toTitleCase} from "@/utils/util";
+import {formatTime, setOutcomeHelper} from "@/utils/validators";
+import {passengerService} from "@/actions/services/passengerService";
+import {messageBoardService} from "@/actions/services/messageBoardService";
 
 
-interface ActiveFlightRow extends DataRow {
+interface GateFlightRow extends DataRow {
     flight: string;
     terminal: string;
     gate: string;
-    status: string;
+    destination: string;
+    departure: string;
     passengers: number;
     action: string;
 }
 
-const columns = ["flight", "terminal", "gate", "status", "passengers", "action"];
-const rows: ActiveFlightRow[] = [
-    {
-        flight: "AA3245",
-        terminal: "T5",
-        gate: "G5",
-        status: "Boarding",
-        passengers: 234,
-        action: "Change Gate"
-    },
-    {
-        flight: "UA9868",
-        terminal: "T9",
-        gate: "G9",
-        status: "Open",
-        passengers: 234,
-        action: "Change Gate"
-    },
-];
+const columns = ["flight", "terminal", "gate", "destination", "departure", "passengers", "action"];
+
 
 const GateStaffDashboard = () => {
     const {user, loading} = useAuth();
-    const [isConfirm, setConfirm] = React.useState(false);
-    const  [isConfirmDeparture, setConfirmDeparture] = React.useState(false);
-    const [isConfirmChanges, setConfirmChanges] = React.useState(false);
-    const [isOpenBoard, setOpenBoard] = React.useState(false);
-    const [openChangeGate, setChangeGate] = React.useState(false);
-    const [selectedRow, setSelectedRow] = React.useState<DataRow>();
-    const [newGate, setNewGate] = React.useState<DataRow>();
-    const [ticketNumber, setTicketNumber] = React.useState<string>('');
+    const [isConfirm, setConfirm] = useState(false);
+    const [isConfirmDeparture, setConfirmDeparture] = useState(false);
+    const [isConfirmChanges, setConfirmChanges] = useState(false);
+    const [isOpenBoard, setOpenBoard] = useState(false);
+    const [openChangeGate, setChangeGate] = useState(false);
+    const [selectedRow, setSelectedRow] = useState<DataRow>();
+    const [newGate, setNewGate] = useState<DataRow>();
+    const [ticketNumber, setTicketNumber] = useState<string>('');
+    const [flightRows, setFlightRows] = useState<Flight[]>([]);
+    const [passenger, setPassenger] = React.useState<Passenger>();
 
+    const [outcome, setOutcome] = useState<OutcomeProps>();
+
+    // Fetch Flight list
+    const fetchFlights = () => {
+        try {
+            const res: Flight[] = flightService.getAll();
+            const gateFlights: Flight[] = res.filter((f: Flight) => f.gate === user?.accessLevel)
+            setFlightRows(gateFlights);
+        } catch (e) {
+            console.error("Error fetching staff rows:", e);
+        }
+    };
+
+    // Initial fetch
+    useEffect(() => fetchFlights(), []);
 
     /// Confirm Departure Implementation
     const onConfirmDeparture = (success: boolean) => {
@@ -65,40 +72,74 @@ const GateStaffDashboard = () => {
         }
     }
 
-    /// Passenger OnBoarding Implementation
-    const handleBoarding = (row: DataRow) => {
-        setConfirm(true);
-        setTicketNumber(row.ticketNumber as string);
+    const handleBoarding = (proceed: boolean) => {
 
-        const {ticketNumber, flightNumber} = row;
-        console.log(ticketNumber, flightNumber);
-    }
-
-    const onConfirmedBoarding = (choice: boolean) => {
-        console.log('Boarding choice', choice);
         if (isConfirm) {
-            // @ TODO API integration here
-            console.log('on boarding passenger with ticket Number:', ticketNumber);
-            setConfirm(false);
+            try {
+                const passenger = passengerService.board(ticketNumber);
+                if (!passenger) {
+                    setConfirm(false);
+                    setPassenger(undefined);
+
+                    return setOutcomeHelper('error', "Passenger not found or not checked-in", setOutcome);
+                }
+
+                setOutcomeHelper('success', "Passenger onboard", setOutcome);
+                setPassenger(passenger);
+
+                setConfirm(false);
+            } catch (err) {
+                setOutcomeHelper('error', err instanceof Error ? err.message : "Passenger must be checked in", setOutcome);
+                setConfirm(false);
+                setPassenger(undefined);
+            }
         }
     }
 
+    const handleGateChanges = (choice: boolean) => {
+        console.log('Steve-Change Gate from:', choice, newGate?.terminal, newGate?.newGate);
 
-    /// Change Gate Implementation
-    const handleChangeGate = (row: DataRow) => {
-        setNewGate(row);
+        if (isConfirm && newGate?.terminal && user) {
+            console.log('updating-flight gate');
 
-        const {ticketNumber, flightNumber} = row;
-        console.log(ticketNumber, flightNumber);
-    }
+            try {
+                const flight = flightService.changeGate(
+                    newGate.flight as string,
+                    {
+                        gate: newGate.gate as string,
+                        terminal: newGate.terminal as string,
+                    }
+                );
 
-    const onConfirmedGateChanges = (choice: boolean) => {
-        console.log('Change Gate choice', choice);
+                if (!flight) {
+                    setConfirmChanges(false);
+                    setPassenger(undefined);
 
-        if (isConfirm) {
-            // @ TODO API integration here
-            console.log('Change Gate from:', newGate?.terminal, newGate?.newGate);
-            setConfirmChanges(false);
+                    return setOutcomeHelper('error', "Flight not found", setOutcome);
+                }
+
+                setOutcomeHelper('success', "Flight gate and terminal changed successfully", setOutcome);
+                // setPassenger(flight);
+
+                // Inform Ground Staff via MessageBoard
+                messageBoardService.post({
+                    role: RoleEnum.GROUND as UserRole,
+                    msg: {
+                        message: "Gate Change Notice:\n" +
+                            `Flight ${selectedRow?.flight} moved from ${selectedRow?.terminal + '-' + selectedRow?.gate} to ${newGate?.terminal + '-' + newGate?.newGate}.` +
+                            "All future bags must be routed to the new gate.\n",
+                        to: RoleEnum.GROUND as UserRole,
+                        fromRole: user?.role,
+                        airline: user?.airline,
+                    } as MessageBoard
+                })
+
+                setConfirmChanges(false);
+            } catch (err) {
+                setOutcomeHelper('error', err instanceof Error ? err.message : "Flight not found", setOutcome);
+                setConfirmChanges(false);
+                setPassenger(undefined);
+            }
         }
     }
 
@@ -107,55 +148,73 @@ const GateStaffDashboard = () => {
     return (
         <RoleGuard allowedRoles={[RoleEnum.GATE]}>
             <PageTitleUpdater/>
-            {/*Active's Flight Info*/}
-            <UITable<ActiveFlightRow>
+
+            <UITable<GateFlightRow>
                 title='Gate Staff Dashboard'
-                name={user?.lastName}
+                name={user?.lastName + (user?.accessLevel ? ' at GATE: ' + user.accessLevel : '')}
                 columns={columns}
                 topAlignment='justify'
-                rows={rows}
+                rows={(Array.isArray(flightRows) ? flightRows : []).map((f: Flight) => (
+                    {
+                        flight: f.flightNumber,
+                        gate: f.gate,
+                        terminal: f.terminal,
+                        destination: toTitleCase(f.destination),
+                        departure: formatTime(f.departureTime),
+                        passengers: f.tickets.length ?? 0,
+                        action: "Change Gate"
+                    }
+                )) as GateFlightRow[]}
                 topButton={
-                    <Container sx={{justifyContent: "space-between", mr: 0, pr: 0}}>
-                        {/* Buttons */}
-                        <Grid container rowSpacing={2} columnSpacing={{xs: 1, sm: 2, md: 2}} sx={{
-                            justifyContent: "end"
-                        }}>
-                            <Grid size={{xs: 12, md: 3}}>
-                                <Button
-                                    variant="outlined"
-                                    size="large"
-                                    sx={{
-                                        textTransform: 'none',
-                                        '&': {boxShadow: 3},
-                                    }}
-                                    onClick={() => setOpenBoard(true)}
-                                >
-                                    Board Passenger
-                                </Button>
+                    flightRows.length > 0 ? (
+                        <Container sx={{justifyContent: "space-between", mr: 0, pr: 0}}>
+                            {/* Buttons */}
+                            <Grid container rowSpacing={2} columnSpacing={{xs: 1, sm: 2, md: 2}} sx={{
+                                justifyContent: "end"
+                            }}>
+                                <Grid size={{xs: 12, md: 3}}>
+                                    <Button
+                                        variant="outlined"
+                                        size="large"
+                                        sx={{
+                                            textTransform: 'none',
+                                            '&': {boxShadow: 3},
+                                        }}
+                                        onClick={() => {
+                                            setOpenBoard(true);
+                                            setOutcome(undefined);
+                                        }}
+                                    >
+                                        Board Passenger
+                                    </Button>
+                                </Grid>
+                                <Grid size={{xs: 12, md: 3}}>
+                                    <Button
+                                        variant="outlined"
+                                        size="large"
+                                        sx={{
+                                            textTransform: 'none',
+                                            '&': {boxShadow: 3},
+                                        }}
+                                        onClick={() => {
+                                            setConfirmDeparture(true);
+                                            setOutcome(undefined);
+                                        }}
+                                    >
+                                        Confirm Departure
+                                    </Button>
+                                </Grid>
                             </Grid>
-                            <Grid size={{xs: 12, md: 3}}>
-                                <Button
-                                    variant="outlined"
-                                    size="large"
-                                    sx={{
-                                        textTransform: 'none',
-                                        '&': {boxShadow: 3},
-                                    }}
-                                    onClick={() => setConfirmDeparture(true)}
-                                >
-                                    Confirm Departure
-                                </Button>
-                            </Grid>
-                        </Grid>
 
-                        {/* Quick Actions */}
-                        <Typography variant="h6" component="h4" fontWeight='normal' gutterBottom>
-                            [ <b>Active Flight</b> (AA) ]
-                        </Typography>
-                    </Container>
+                            {/* Quick Actions */}
+                            <Typography variant="h6" component="h4" fontWeight='normal' gutterBottom>
+                                [ Flights at Gate <b>{user?.accessLevel}</b> ]
+                            </Typography>
+                        </Container>
+                    ) : null
                 }
-                onActionCallback={(row: ActiveFlightRow) => {
-                    console.log('set Change Gate', row.flight);
+                onActionCallback={(row: GateFlightRow) => {
+                    console.log('Set Change Gate', row.flight);
                     setChangeGate(true);
                     setSelectedRow(row);
                 }}
@@ -173,7 +232,13 @@ const GateStaffDashboard = () => {
             {isOpenBoard && (<BoardDialog
                 open={isOpenBoard}
                 onClose={() => setOpenBoard(false)}
-                onBoard={handleBoarding}
+                outcome={outcome}
+                setOutcome={setOutcome}
+                passenger={passenger}
+                onBoard={(row) => {
+                    setConfirm(true);
+                    setTicketNumber(row);
+                }}
             />)}
 
             {/*Confirm Boarding Dialog*/}
@@ -187,7 +252,7 @@ const GateStaffDashboard = () => {
                         Confirm boarding for passenger with Ticket<strong>{ticketNumber}</strong>
                     </>
                 }
-                onRemove={onConfirmedBoarding}
+                onRemove={handleBoarding}
             />)}
 
 
@@ -196,11 +261,17 @@ const GateStaffDashboard = () => {
                 open={openChangeGate}
                 oldFlight={selectedRow?.flight as string}
                 oldGate={selectedRow?.terminal + '-' + selectedRow?.gate}
+                oldDestination={selectedRow?.destination as string}
+                outcome={outcome}
+                setOutcome={setOutcome}
                 onClose={() => setChangeGate(false)}
-                onChangeGate={handleChangeGate}
+                onChangeGate={(row) => {
+                    setConfirmChanges(true);
+                    setNewGate(row);
+                }}
             />)}
 
-            {/*Confirm Passenger's Change Gate Dialog*/}
+            {/*Confirm Change Gate & Terminal Dialog*/}
             {isConfirmChanges && (<ConfirmEntityDialog
                 open={isConfirmChanges}
                 onClose={() => setConfirmChanges(false)}
@@ -209,12 +280,13 @@ const GateStaffDashboard = () => {
                 message={
                     <>
                         Are you sure you want to change the gate for Flight<b>{selectedRow?.flight}</b> from:
-                        <b style={{color:'red'}}>{selectedRow?.terminal}-{selectedRow?.gate}</b>
-                        to <b style={{color:'green'}}>{newGate?.terminal}-{newGate?.newGate}</b>
+                        <b style={{color: 'red'}}>{selectedRow?.terminal}-{selectedRow?.gate}</b>
+                        to <b style={{color: 'green'}}>{newGate?.terminal}-{newGate?.newGate}</b>
                     </>
                 }
-                onRemove={onConfirmedGateChanges}
+                onRemove={handleGateChanges}
             />)}
+            {/*</Box>*/}
         </RoleGuard>
     )
 }

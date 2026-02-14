@@ -5,41 +5,40 @@ import {Box, Button, TextField, Typography, Paper, Divider, Link} from '@mui/mat
 import { useSearchParams} from 'next/navigation';
 import {dashboardRedirectPath, RoleEnum} from "@/types/userRole";
 import {useAuth} from "@/actions/authContext";
-import {clearErrorAndSet, isNumeric} from "@/components/util";
+import {clearErrorAndSet, isNumeric} from "@/utils/util";
+import {authService} from "@/actions/services/authService";
+import {passengerService} from "@/actions/services/passengerService";
 
 const PassengerLoginForm = () => {
     const {login} = useAuth();
-    const searchParams = useSearchParams();
-    const [error, setError] = useState<string | null>(null);
+    // const searchParams = useSearchParams();
     const [ticketNumber, setTicketNumber] = useState('');
-    const [identification, setIdentification] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [idNumber, setIdNumber] = useState('');
 
-    const handleSubmit = (e: React.SubmitEvent) => {
-        e.preventDefault();
+    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+        e.preventDefault();// redirect after login
 
-        if (ticketNumber.length!==10) {
+        if (ticketNumber.length!==10 || !isNumeric(ticketNumber)) {
             setError('Please enter a valid 10 digit ticket number.');
             return;
         }
-        let id = identification.trim();
+        let id = idNumber.trim();
         if (id.length !== 6 || !isNumeric(id)) {
-            setError('Please enter a valid 6 digit identification number.');
+            setError('Please enter a valid 6 digit ID number.');
             return;
         }
 
-        // TODO: call backend API here
-        // Fake backend response for now
-        const userFromApi = {
-            username: 'steve',
-            firstName: 'Steve',
-            lastName: 'Tony',
-            role: RoleEnum.PASSENGER, // or 'ADMIN', 'GROUND', 'PASSENGER'.
-            airlineCode: 'UA',
-        };
+        // Call authService
+        const result = passengerService.login(ticketNumber, id);
 
-        // persist updated user
-        const redirectPath = searchParams.get('redirect') || dashboardRedirectPath({role: userFromApi.role});
-        login(userFromApi, true, redirectPath);
+        if (!result.success) {
+            setError(result.error || 'Passenger not found.');
+            return;
+        }
+
+        // Login success → store in AuthContext
+        login(result.user, true, dashboardRedirectPath({role: result.user.role}));
     };
 
     return (
@@ -68,6 +67,7 @@ const PassengerLoginForm = () => {
                         size="small"
                         fullWidth
                         required
+                        helperText="Ticket number can be up to 10 digits"
                         slotProps={{
                             input: {
                                 inputProps: {maxLength: 10,}
@@ -89,8 +89,9 @@ const PassengerLoginForm = () => {
                             },
                         }}
                         sx={{mb: 3}}
-                        value={identification}
-                        onChange={clearErrorAndSet(setIdentification, setError)}
+                        value={idNumber}
+                        helperText="ID number can be up to 6 digits"
+                        onChange={clearErrorAndSet(setIdNumber, setError)}
                     />
                     {error && (
                         <Typography color="error" variant="body2" sx={{mb: 1}}>
@@ -99,7 +100,7 @@ const PassengerLoginForm = () => {
                     )}
                     <Button type="submit" variant="contained" color="primary"
                             sx={{textTransform: 'none'}}
-                            disabled={!ticketNumber || !identification}
+                            disabled={!ticketNumber || !idNumber}
                             fullWidth
                     >
                         Login

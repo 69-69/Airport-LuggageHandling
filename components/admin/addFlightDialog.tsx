@@ -2,74 +2,124 @@
 
 import * as React from 'react';
 import {
-    InputAdornment,
+    Alert,
     TextField,
-    Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
-import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
 import {Grid} from "@mui/system";
-import {clearErrorAndSet, clearErrorAndSetString, isNumeric, manualGates, manualTerminals} from "@/components/util";
+import {
+    clearOutcomeError,
+    clearOutcomeErrorString,
+    isNumeric, manualAirlines,
+    manualGates,
+    manualTerminals,
+    OutcomeProps
+} from "@/utils/util";
+import {ensureAbbreviation, setOutcomeHelper} from "@/utils/validators";
+import {SendResult} from "@/types/models";
+import {addFlight} from "@/actions/endpoints";
 
 interface AddFlightDialogProps {
     open: boolean;
     onClose: () => void;
-    onAddFlight: (row: DataRow) => void;
+    refreshFlights?: () => void;
+    // onAddFlight: (row: DataRow) => void;
 }
 
 const AddFlightDialog = ({
                              open,
                              onClose,
-                             onAddFlight,
+                             refreshFlights
                          }: AddFlightDialogProps) => {
 
-    const [airlineName, setAirlineName] = React.useState('');
+    const [outcome, setOutcome] = React.useState<OutcomeProps>();
+    const [airline, setAirline] = React.useState('');
+    const [destination, setDestination] = React.useState('');
     const [flightNumber, setFlightNumber] = React.useState('');
     const [terminal, setTerminal] = React.useState('');
-    const [newGate, setNewGate] = React.useState('');
+    const [gate, setGate] = React.useState('');
     const [flightId, setFlightId] = React.useState('');
-    const [error, setError] = React.useState<string | null>(null);
+    const [departureTime, setDepartureTime] = React.useState('');
+
+    // const [error, setOutcome] = React.useState<string | null>(null);
 
     const handleChange = () => {
-        if (airlineName.length < 2) {
-            setError('Enter a valid airline name');
-            return;
+        if (airline.length < 3) {
+            return setOutcomeHelper('error', 'Enter a valid airline name', setOutcome);
         }
         if (!flightId || !isNumeric(flightId)) {
-            setError('Flight ID is required');
-            return;
+            return setOutcomeHelper('error', 'Enter a valid flight ID', setOutcome);
+        }
+        if (flightId.length < 4) {
+            return setOutcomeHelper('error', 'Flight ID must be at least 4 characters long.', setOutcome);
         }
         if (!flightNumber) {
-            setError('Flight Number is required');
-            return;
+            return setOutcomeHelper('error', 'Flight number is required', setOutcome);
         }
-        if (newGate.length < 2) {
-            setError('Gate is required');
-            return;
+        if (flightNumber.length !== 6) {
+            return setOutcomeHelper('error', 'Flight number must be at most 6 characters long.', setOutcome);
+        }
+        // Letters at start + exactly 4 digits
+        const flightRegex = /^[A-Za-z]+\d{4}$/;
+        if (!flightRegex.test(flightNumber)) {
+            return setOutcomeHelper('error',
+                'Flight number must be 2-letter airline abbreviation plus 4-digit flight ID (e.g., DL7245)',
+                setOutcome
+            );
         }
         if (terminal.length < 2) {
-            setError('Terminal is required');
-            return;
+            return setOutcomeHelper('error', 'Terminal is required', setOutcome);
+        }
+        if (gate.length < 2) {
+            return setOutcomeHelper('error', 'Gate is required', setOutcome);
+        }
+        if (!departureTime) {
+            return setOutcomeHelper('error', 'Departure time is required', setOutcome);
         }
 
-        setError('');
-        onAddFlight({
-            airlineName: airlineName,
-            flightNumber: flightNumber,
+        setOutcomeHelper('success', 'Flight added successfully!', setOutcome); // If everything is valid, set success message
+
+        const result: SendResult = addFlight({
+            airlineName: ensureAbbreviation(airline), // E.g: → "BA - British Airways"
+            destination: destination,
             flightId: flightId,
-            newGate: newGate,
+            flightNumber: flightNumber,
+            gate: gate,
             terminal: terminal,
+            departureTime: new Date(departureTime).toISOString(),
         });
-        onClose();
+
+        if (result.success) {
+            setOutcome({status: 'success', message: 'Flight added successfully',});
+            if (refreshFlights) {
+                refreshFlights();
+            }
+
+            // Reset form immediately
+            resetForm();
+        } else {
+            setOutcome({status: 'error', message: result.error ?? ''});
+            console.log('Flight', result.error);
+        }
     };
 
-    let inputAdornment = <><InputAdornment
-        position="start"
-        sx={{bgcolor: 'rgba(109,184,236,0.8)', py: 0.1, px: 1, borderRadius: 1}}
-    >
-        <Typography color="error">Auto</Typography>
-    </InputAdornment></>;
+    const resetForm = () => {
+        setAirline('');
+        setDestination('');
+        setFlightNumber('');
+        setFlightId('');
+        setGate('');
+        setTerminal('');
+        setDepartureTime('');
+
+        // Clear the outcome
+        // setOutcome(undefined);
+
+        // Call the onClose function passed from the parent
+        // onClose();
+    }
+
     return (
         <UiDialog
             open={open}
@@ -77,18 +127,27 @@ const AddFlightDialog = ({
             title="Add Flight"
             onConfirm={handleChange}
             cancelLabel={'Cancel'}
-            confirmDisabled={!airlineName || !flightId || !flightNumber || !newGate || !terminal}
+            confirmDisabled={!airline || !flightId || !flightNumber || !gate || !terminal}
             confirmLabel={'Add'}
             content={
                 <>
+                    <AutocompleteDropdown
+                        label="Airline"
+                        data={[' ', ...manualAirlines]}
+                        value={airline}
+                        helperText="Type to search airlines, or enter one manually"
+                        onChange={clearOutcomeErrorString(setAirline, setOutcome)}
+                    />
                     <TextField
-                        label="Airline Name"
+                        label="Destination"
                         type="text"
                         fullWidth
                         size="small"
-                        value={airlineName}
-                        onChange={clearErrorAndSet(setAirlineName, setError)}
-                        slotProps={{input: {id: 'airline-name', autoFocus: true},}}
+                        value={destination}
+                        onChange={clearOutcomeError(setDestination, setOutcome)}
+                        slotProps={{
+                            input: {id: 'destination'},
+                        }}
                     />
 
                     <Grid container spacing={2}>
@@ -99,12 +158,13 @@ const AddFlightDialog = ({
                                 fullWidth
                                 size="small"
                                 value={flightId}
-                                disabled={flightId.length>0}
-                                onChange={clearErrorAndSet(setFlightId, setError)}
+                                helperText="Flight Id (e.g: 1234)"
+                                // disabled={flightId.length>0}
+                                onChange={clearOutcomeError(setFlightId, setOutcome)}
                                 slotProps={{
                                     input: {
                                         id: 'flight-id',
-                                        startAdornment: inputAdornment,
+                                        // startAdornment: inputAdornment,
                                     },
                                 }}
                             />
@@ -116,30 +176,60 @@ const AddFlightDialog = ({
                                 fullWidth
                                 size="small"
                                 value={flightNumber}
-                                disabled={flightNumber.length>3}
-                                onChange={clearErrorAndSet(setFlightNumber, setError)}
+                                helperText="Maximum up to 6 characters (e.g: AA1234)"
+                                // disabled={flightNumber.length ==6}
+                                onChange={clearOutcomeError(setFlightNumber, setOutcome)}
                                 slotProps={{
                                     input: {
                                         id: 'flight-number',
-                                        startAdornment: inputAdornment,
+                                        // startAdornment: inputAdornment,
+                                        inputProps: {maxLength: 6, minLength: 6},
                                     },
                                 }}
                             />
                         </Grid>
                     </Grid>
                     <AutocompleteDropdown
-                        label="Terminal" data={[' ',...manualTerminals]}
-                        onChange={clearErrorAndSetString(setTerminal, setError)}
+                        label="Terminal" data={[' ', ...manualTerminals]}
+                        value={terminal}
+                        onChange={clearOutcomeErrorString(setTerminal, setOutcome)}
                     />
                     <AutocompleteDropdown
-                        label="Gate Number" data={[' ',...manualGates]}
-                        onChange={clearErrorAndSetString(setNewGate, setError)}
+                        label="Gate Number" data={[' ', ...manualGates]}
+                        value={gate}
+                        onChange={clearOutcomeErrorString(setGate, setOutcome)}
                     />
-                    {error && (
-                        <Typography color="error" variant="body2">
-                            {error}
-                        </Typography>
+                    <TextField
+                        label="Departure Time"
+                        type="datetime-local"
+                        fullWidth
+                        size="small"
+                        value={departureTime}
+                        onChange={(e) => {
+                            setDepartureTime(e.target.value);
+                            if (outcome?.status === 'error') {
+                                setOutcome(undefined);
+                            }
+                        }}
+                        slotProps={{
+                            inputLabel: {
+                                shrink: true,
+                            },
+                        }}
+                    />
+                    {outcome && outcome.status !== undefined && (
+                        <Alert severity={outcome.status}>{outcome.message}</Alert>
                     )}
+                    {/*<TextField
+                        label="Airline Name"
+                        type="text"
+                        fullWidth
+                        size="small"
+                        value={airline}
+                        // onChange={onChangedAirlineName}
+                        onChange={clearOutcomeError(setAirlineName, setOutcome)}
+                        slotProps={{input: {id: 'airline-name'},}}
+                    />*/}
                 </>
             }/>
     );
@@ -147,3 +237,47 @@ const AddFlightDialog = ({
 
 export default AddFlightDialog;
 
+/*
+    useEffect(() => {
+        if (open) {
+            const ticketNo = flightIdGenerator();
+            setFlightId(ticketNo.toString());
+
+            if (debouncedAirlineName.length > 5) {
+                const airlineAbbreviation = getAirlineAbbreviation(airlineName);
+                setFlightNumber(airlineAbbreviation+ticketNo);
+            }
+        }
+    }, [open, debouncedAirlineName]);
+
+let inputAdornment = <><InputAdornment
+        position="start"
+        sx={{bgcolor: 'rgba(109,184,236,0.8)', py: 0.1, px: 1, borderRadius: 1}}
+    >
+        <Typography color="error">Auto</Typography>
+    </InputAdornment></>;
+
+const [debouncedAirlineName, setDebouncedAirlineName] = React.useState(airlineName);
+    const [typingTimeout, setTypingTimeout] = React.useState<NodeJS.Timeout | null>(null);
+
+    // Debouncing: to wait for the user to finish typing before triggering the effect
+    const onChangedAirlineName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setAirlineName(e.target.value);
+
+        // Clear error if any when the user starts typing
+        if (outcome?.status === 'error') {
+            setOutcome(undefined);
+        }
+
+        // Clear the previous timeout if any
+        if(typingTimeout) {
+            clearTimeout(typingTimeout);
+        }
+
+        // Set a new timeout to update debounced value after 500ms of no typing
+        const timeout = setTimeout(() => {
+            setDebouncedAirlineName(e.target.value);
+        }, 500); // 500ms delay before updating
+        setTypingTimeout(timeout);
+    };
+*/

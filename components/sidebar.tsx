@@ -8,11 +8,12 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import {usePathname, useRouter} from 'next/navigation';
-import {useTheme, useMediaQuery, Box, Toolbar} from '@mui/material';
-import {UserRole} from "@/types/userRole";
+import {useTheme, Box, Toolbar} from '@mui/material';
+import {UserRole} from "@/types/models";
 
 interface SidebarProps {
     role: UserRole;
+    isMobile:boolean;
 }
 
 const menuItemsByRole: Record<UserRole, { label: string; path: string }[]> = {
@@ -21,31 +22,31 @@ const menuItemsByRole: Record<UserRole, { label: string; path: string }[]> = {
         {label: 'Flights', path: '/dashboard/admin/flights'},
         {label: 'Passengers', path: '/dashboard/admin/passengers'},
         {label: 'Staffs', path: '/dashboard/admin/staffs'},
-        {label: 'Message Board', path: '/dashboard/admin/messages'},
+        {label: 'Message Board', path: '/dashboard/messages'},
     ],
     AIRLINE: [ // Airline Staff
         {label: 'Dashboard', path: '/dashboard/airline'},
         {label: 'Flights', path: '/dashboard/airline/flights'},
-        {label: 'Message Board', path: '/dashboard/airline/messages'},
+        {label: 'Message Board', path: '/dashboard/messages'},
     ],
     GATE: [ // Gate Staff
         {label: 'Dashboard', path: '/dashboard/gate'},
         {label: 'Onboard Manifest', path: '/dashboard/gate/onboard/'},
-        {label: 'Message Board', path: '/dashboard/gate/messages'},
+        {label: 'Message Board', path: '/dashboard/messages'},
     ],
     GROUND: [ // Ground Staff
         {label: 'Dashboard', path: '/dashboard/ground'},
         {label: 'Baggage Manifest', path: '/dashboard/ground/baggage'},
-        {label: 'Message Board', path: '/dashboard/ground/messages'},
+        {label: 'Message Board', path: '/dashboard/messages'},
     ],
     PASSENGER: [],
 };
 
-export default function Sidebar({role}: SidebarProps) {
+export default function Sidebar({role, isMobile}: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    // const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileOpen, setMobileOpen] = React.useState(false);
 
     const handleDrawerToggle = () => {
@@ -53,10 +54,10 @@ export default function Sidebar({role}: SidebarProps) {
     };
 
     const drawerContent = (
-        <Box sx={{width: 240}}>
+        <Box sx={{width: 200}}>
             <Toolbar/>
             <List>
-                {menuItemsByRole[role].map((item) => (
+                {menuItemsByRole[role]?.map((item) => (
                     <ListItemButton
                         key={item.path}
                         selected={pathname === item.path}
@@ -86,21 +87,22 @@ export default function Sidebar({role}: SidebarProps) {
                 </IconButton>
             )}
 
-            {role !== 'PASSENGER' && (<Drawer
-                variant={isMobile ? 'temporary' : 'permanent'}
-                open={isMobile ? mobileOpen : true}
-                onClose={handleDrawerToggle}
-                ModalProps={{keepMounted: true}} // Better mobile performance
-                sx={{
-                    '& .MuiDrawer-paper': {
-                        width: 240,
-                        boxSizing: 'border-box',
-                        mt: '20px', // offset for AppBar
-                    },
-                }}
-            >
-                {drawerContent}
-            </Drawer>)}
+            {role !== 'PASSENGER' &&
+                (<Drawer
+                    variant={isMobile ? 'temporary' : 'permanent'}
+                    open={isMobile ? mobileOpen : true}
+                    onClose={handleDrawerToggle}
+                    ModalProps={{keepMounted: true}} // Better mobile performance
+                    sx={{
+                        '& .MuiDrawer-paper': {
+                            width: 200,
+                            boxSizing: 'border-box',
+                            mt: '20px', // offset for AppBar
+                        },
+                    }}
+                >
+                    {drawerContent}
+                </Drawer>)}
         </>
     );
 }

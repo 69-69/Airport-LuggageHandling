@@ -6,6 +6,9 @@ import {DataRow} from "@/types/dataRow";
 import UITable from "@/components/uiTable";
 import {Grid, TextField, Typography} from "@mui/material";
 import {fetchBaggage} from "@/actions/endpoints";
+import {RoleEnum} from "@/types/userRole";
+import PageTitleUpdater from "@/components/pageTitleUpdater";
+import RoleGuard from "@/actions/roleGuard";
 
 interface BaggageRow extends DataRow {
     bagId: string;
@@ -76,7 +79,8 @@ const BaggageManifest = () => {
 
 
     return (
-        <>
+        <RoleGuard allowedRoles={[RoleEnum.GROUND]}>
+            <PageTitleUpdater />
             <UITable<BaggageRow>
                 columns={columns}
                 rows={filteredRows}
@@ -105,7 +109,7 @@ const BaggageManifest = () => {
                 onActionCallback={(row) => {
                 }}
             />
-        </>
+        </RoleGuard>
     );
 }
 export default BaggageManifest

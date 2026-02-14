@@ -14,6 +14,7 @@ import Sidebar from "@/components/sidebar";
 import {AuthProvider, useAuth} from "@/actions/authContext";
 import FullScreenLoader from "@/components/fullScreenLoader";
 import {RoleEnum} from "@/types/userRole";
+import {useMediaQuery} from "@mui/material";
 
 const roboto = Roboto({
     weight: ['300', '400', '500', '700'],
@@ -22,26 +23,16 @@ const roboto = Roboto({
     variable: '--font-roboto',
 });
 
-/*// TEMP: replace later with auth context
-const user: {
-    role: UserRole;
-    username: string;
-    airlineCode?: string;
-} = {
-    role: 'GATE', // ADMIN
-    username: 'gate01', // admin01
-    airlineCode: 'AA',
-};*/
-
 const AppShell = ({children}: { children: React.ReactNode }) => {
     const {user, logout, loading} = useAuth();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     if (loading) return <FullScreenLoader/>;
 
     return (
         <>
             <Box sx={{display: 'flex', minHeight: '100vh'}}>
-                {user ? ( // Authenticated Header
+                {user && user?.role ? ( // Authenticated Header
                     <>
                         <Header
                             username={
@@ -50,11 +41,11 @@ const AppShell = ({children}: { children: React.ReactNode }) => {
                                     : user.lastName
                             }
                             role={user.role}
-                            airlineCode={user.airlineCode}
+                            airline={user.airline}
                             accessLevel={user.accessLevel}
                             onLogout={logout}
                         />
-                        <Sidebar role={user.role}/>
+                        <Sidebar role={user.role} isMobile={isMobile}/>
                     </>
                 ) : (
                     <Header/> // Un-authenticated Header
@@ -65,7 +56,8 @@ const AppShell = ({children}: { children: React.ReactNode }) => {
                         flexGrow: 1,
                         p: 3,
                         mt: '64px',
-                        m: '0 auto',
+                        mx: 'auto',
+                        ml: { xs: 'auto', md: 24 },
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

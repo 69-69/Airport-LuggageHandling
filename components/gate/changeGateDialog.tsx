@@ -2,49 +2,62 @@
 
 import * as React from 'react';
 import {
+    Alert,
     Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
 import {DataRow} from "@/types/dataRow";
 import {AutocompleteDropdown} from "@/components/dropdown";
-import {clearErrorAndSetString, manualGates, manualTerminals} from "@/components/util";
+import {
+    clearErrorAndSetString,
+    clearOutcomeError, clearOutcomeErrorString,
+    manualGates,
+    manualTerminals,
+    OutcomeProps,
+    toTitleCase
+} from "@/utils/util";
+import {setOutcomeHelper} from "@/utils/validators";
 
 interface ChangeGateDialogProps {
     open: boolean;
     onClose: () => void;
     oldGate: string;
     oldFlight: string;
+    oldDestination: string;
     onChangeGate: (row: DataRow) => void;
+    outcome?: OutcomeProps; // the *current value* of the outcome
+    setOutcome: React.Dispatch<React.SetStateAction<OutcomeProps | undefined>>;
 }
 
 const ChangeGateDialog = ({
                               open,
                               onClose,
+                              outcome,
+                              setOutcome,
                               oldGate,
                               oldFlight,
+                              oldDestination,
                               onChangeGate,
                           }: ChangeGateDialogProps) => {
 
     const [terminal, setTerminal] = React.useState('');
     const [newGate, setNewGate] = React.useState('');
-    const [error, setError] = React.useState<string | null>(null);
 
-    const handleChange = () => {
+    const handleSubmit = () => {
 
         if (terminal.length < 2) {
-            setError('New Terminal is required');
-            return;
+            return setOutcomeHelper('error', 'New Terminal is required', setOutcome);
         }
         if (newGate.length < 2) {
-            setError('New Gate is required');
-            return;
+            return setOutcomeHelper('error', 'New Gate is required', setOutcome);
         }
-        setError('');
+        // setOutcome('');
         onChangeGate({
             terminal: terminal,
             newGate: newGate,
         });
-        onClose();
+
+        // onClose();
     };
 
     return (
@@ -52,28 +65,29 @@ const ChangeGateDialog = ({
             open={open}
             onCancel={onClose}
             title="Change Gate Information"
-            onConfirm={handleChange}
+            onConfirm={handleSubmit}
             cancelLabel={'Cancel'}
             confirmDisabled={!terminal || !newGate}
             confirmLabel={'Save Changes'}
             content={
                 <>
                     <Typography>
-                        <b>Flight:</b> {oldFlight}<br/>
-                        <b>Current Gate:</b> {oldGate}
+                        <b>Flight:</b> {oldFlight.toUpperCase()}<br/>
+                        <b>Current Gate:</b> {oldGate.toUpperCase()}<br/>
+                        <b>Destination:</b> {toTitleCase(oldDestination)}
                     </Typography>
                     <AutocompleteDropdown
-                        label="New Terminal" data={[' ',...manualTerminals]}
-                        onChange={clearErrorAndSetString(setTerminal, setError)}
+                        label="New Terminal" data={[' ', ...manualTerminals]}
+                        value={terminal}
+                        onChange={clearOutcomeErrorString(setTerminal, setOutcome)}
                     />
                     <AutocompleteDropdown
-                        label="New Gate" data={[' ',...manualGates]}
-                        onChange={clearErrorAndSetString(setNewGate, setError)}
+                        label="New Gate" data={[' ', ...manualGates]}
+                        value={newGate}
+                        onChange={clearOutcomeErrorString(setNewGate, setOutcome)}
                     />
-                    {error && (
-                        <Typography color="error" variant="body2">
-                            {error}
-                        </Typography>
+                    {outcome && outcome.status !== undefined && (
+                        <Alert severity={outcome.status}>{outcome.message}</Alert>
                     )}
                 </>
             }/>

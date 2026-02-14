@@ -1,3 +1,28 @@
+# Director Structure
+
+```angular2html
+./
+ ├── services/
+ │    ├── storageService.ts
+ │    ├── authService.ts
+ │    ├── userService.ts
+ │    ├── flightService.ts
+ │    ├── passengerService.ts
+ │    ├── bagService.ts
+ │    └── messageBoardService.ts
+ │
+ ├── utils/
+ │    ├── usernameGenerator.ts
+ │    ├── passwordGenerator.ts
+ │    ├── validators.ts
+ │    ├── util.ts
+ │    └── crypto.ts
+ │
+ ├── types/
+ │    └── models.ts
+```
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

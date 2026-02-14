@@ -8,6 +8,12 @@ import {addFlight, removeStaff} from "@/actions/endpoints";
 import {DataRow} from "@/types/dataRow";
 import {useParams} from "next/navigation";
 import MessageDialog from "@/components/postMessageDialog";
+import {OutcomeProps} from "@/utils/util";
+import {useAuth} from "@/actions/authContext";
+import FullScreenLoader from "@/components/fullScreenLoader";
+import {RoleEnum} from "@/types/userRole";
+import PageTitleUpdater from "@/components/pageTitleUpdater";
+import RoleGuard from "@/actions/roleGuard";
 
 interface MessageRow extends DataRow {
     id: string;
@@ -39,10 +45,15 @@ const fetchMessages = async (flight_id: string) => {
 };
 
 const MessageBoardTable = () => {
+    const {user, loading} = useAuth();
+
+    if (loading) return <FullScreenLoader/>
+
     const params = useParams();
     const flight_id = params?.flight_id as string;
 
     const [data, setData] = React.useState([]);
+    const [outcome, setOutcome] = React.useState<OutcomeProps>();
     const [openMsgDialog, setOpenMsgDialog] = React.useState<boolean>(false);
     const [selectedRow, setSelectedRow] = React.useState<MessageRow>();
     const [isConfirm, setConfirm] = React.useState<boolean>(false);
@@ -52,10 +63,9 @@ const MessageBoardTable = () => {
         await removeStaff(flight_id);
     };
 
-    const handlePostMessage = async (row: DataRow) => {
+    const handlePostMessage = (row: DataRow) => {
         const {airlineCode, flightNumber} = row;
         console.log('Flight', flightNumber);
-        await addFlight(airlineCode);
     };
 
     useEffect(() => {
@@ -68,7 +78,8 @@ const MessageBoardTable = () => {
 
 
     return (
-        <>
+        <RoleGuard allowedRoles={[RoleEnum.GROUND]}>
+            <PageTitleUpdater />
             <UITable<MessageRow>
                 columns={columns}
                 rows={rows}
@@ -96,11 +107,14 @@ const MessageBoardTable = () => {
                 onRemove={handleOnRemove}
             />
             <MessageDialog
+                // role={user?.role}
                 open={openMsgDialog}
+                outcome={outcome}
+                setOutcome={setOutcome}
                 onClose={() => setOpenMsgDialog(false)}
                 onPost={handlePostMessage}
             />
-        </>
+        </RoleGuard>
     );
 }
 

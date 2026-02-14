@@ -19,7 +19,7 @@ const Footer = ()=>  {
                 CS 7336 – Web Application Development | Spring 2026
             </Typography>
             <Typography variant="caption">
-                © 2026 Airport Luggage Handling System
+                &copy;{new Date().getFullYear()} Airport Luggage Handling System
             </Typography>
         </Box>
     );

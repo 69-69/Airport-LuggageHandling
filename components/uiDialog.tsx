@@ -13,11 +13,13 @@ import {
 interface UIDialogProps {
     title: string;
     open: boolean;
+    dialogWidth?: number;
     onCancel: () => void;
     optionLabel?: string;
     cancelLabel?: string;
     confirmLabel?: string;
     content: React.ReactNode;
+    optDisabled?: boolean;
     confirmDisabled?: boolean;
     onOption?: () => void | Promise<void>;
     onConfirm?: () => void | Promise<void>;
@@ -26,6 +28,7 @@ interface UIDialogProps {
 const UiDialog = ({
                       open,
                       title,
+                      dialogWidth,
                       onCancel,
                       content,
                       optionLabel,
@@ -33,6 +36,7 @@ const UiDialog = ({
                       confirmLabel,
                       onOption,
                       confirmDisabled,
+                      optDisabled,
                       onConfirm,
                   }: UIDialogProps) => {
 
@@ -56,17 +60,19 @@ const UiDialog = ({
             aria-describedby="dialog-description"
         >
             <DialogTitle id="dialog-title" align="center">{title}</DialogTitle>
-            <DialogContent id="dialog-description" sx={{display: 'flex', width: 500, flexDirection: 'column', gap: 2, mt: 1}}>
+            <DialogContent id="dialog-description"
+                           sx={{display: 'flex', width: dialogWidth ?? 550, flexDirection: 'column', gap: 2, mt: 1}}>
                 <Box sx={{flexGrow: 1}}></Box>
                 {content}
             </DialogContent>
-            <DialogActions sx={{mx: 2, my:1}}>
+            <DialogActions sx={{mx: 2, my: 1}}>
                 <Button onClick={onCancel} color="error" variant="outlined"
                         size="small" sx={{textTransform: 'none'}}>
                     {cancelLabel ?? 'No'}
                 </Button>
                 {optionLabel && (
-                    <Button onClick={handleOptional} size="small" variant="outlined"
+                    <Button onClick={handleOptional} disabled={optDisabled}
+                            size="small" variant="outlined"
                             color="inherit" sx={{textTransform: 'none'}}>
                         {optionLabel}
                     </Button>

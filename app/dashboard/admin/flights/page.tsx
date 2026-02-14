@@ -1,91 +1,102 @@
 'use client';
 
-import React from "react";
+import React, {useEffect} from "react";
 import UITable from "@/components/uiTable";
 import {Button} from "@mui/material";
 import ConfirmEntityDialog from "@/components/confirmEntityDialog";
-import {addFlight, removeStaff} from "@/actions/endpoints";
 import AddFlightDialog from "@/components/admin/addFlightDialog";
 import {DataRow} from "@/types/dataRow";
-
-interface FlightTableProps {
-    flightId: string;
-    // onAddFlight: (flightId: string) => void;
-}
+import {formatAirline, toTitleCase} from "@/utils/util";
+import {Flight} from "@/types/models";
+import {flightService} from "@/actions/services/flightService";
+import {useRouter} from "next/navigation";
+import {RoleEnum} from "@/types/userRole";
+import PageTitleUpdater from "@/components/pageTitleUpdater";
+import RoleGuard from "@/actions/roleGuard";
+import {formatTime} from "@/utils/validators";
 
 interface FlightRow extends DataRow {
-    airline: string;
     flight: string;
+    airline: string;
     terminal: string;
     gate: string;
+    destination: string;
+    departure: string;
+    passengers: number;
+    status: string;
     action: string;
 }
 
-const columns = ["airline", "flight", "terminal", "gate", "action"];
-const rows: FlightRow[] = [
-    {
-        airline: "AA",
-        flight: "AA3245",
-        terminal: "T2",
-        gate: "G5",
-        action: "Remove",
-    },
-    {
-        airline: "UA",
-        flight: "UA9868",
-        terminal: "T9",
-        gate: "G9",
-        action: "Remove",
-    },
-    {
-        airline: "SA",
-        flight: "SA1234",
-        terminal: "T7",
-        gate: "G4",
-        action: "Remove",
-    }
-];
+const columns = ["flight", "airline", "terminal", "gate", "destination", "departure", "passengers", "status","action"];
 
-const Flights = ({flightId}: FlightTableProps) => {
+const Flights = () => {
+    const router = useRouter();
+    // const [outcome, setOutcome] = React.useState<OutcomeProps>();
     const [isConfirm, setConfirm] = React.useState(false);
     const [selectedRow, setSelectedRow] = React.useState<DataRow>();
     const [isAdd, setIsAdd] = React.useState(false);
+    const [flightRows, setFlightRows] = React.useState<Flight[]>([]);
 
-
-    const handleOnRemove = async (proceed: boolean) => {
-        console.log('proceed', proceed);
-        await removeStaff(flightId);
-        setConfirm(false); // UI state stays on client
+    // Fetch Flight list
+    const fetchFlights = () => {
+        try {
+            const res: Flight[] = flightService.getAll();
+            setFlightRows(res);
+        } catch (e) {
+            console.error("Error fetching staff rows:", e);
+        }
     };
 
-    const handleAddFlight = async () => {
-        console.log('Airline', selectedRow?.flightNumber);
-        await addFlight(selectedRow?.airlineCode);
+    // Initial fetch
+    useEffect(() => fetchFlights(), []);
+
+    const handleOnRemove = (proceed: boolean) => {
+
+        if (proceed && selectedRow?.flight !== null) {
+            flightService.remove(selectedRow?.flight as string);
+            fetchFlights();
+            setConfirm(false); // UI state stays on client
+        }
     };
 
     return (
-        <>
+        <RoleGuard allowedRoles={[RoleEnum.ADMIN]}>
+            <PageTitleUpdater />
             <UITable<FlightRow>
                 columns={columns}
-                rows={rows}
-                title={`Flight Management ${flightId}`}
+                rows={(Array.isArray(flightRows)? flightRows : []).map((f: Flight) => ({
+                    flight: f.flightNumber.toUpperCase(),
+                    airline: formatAirline(f.airlineName),
+                    terminal: f.terminal.toUpperCase(),
+                    gate: f.gate.toUpperCase(),
+                    destination: toTitleCase(f?.destination),
+                    departure: formatTime(f?.departureTime),
+                    passengers: f?.tickets.length ?? 0,
+                    status: "Manifest",
+                    action: "Remove",
+                }))}
+                title="Flight Management"
                 topButton={
                     <Button variant="outlined" sx={{textTransform:'none'}} onClick={() => setIsAdd(true)}>
                         Add Flight
                     </Button>
                 }
+                onStatusCallback={(row: FlightRow) => router.push(`/dashboard/airline/${row.flight}`)}
                 onActionCallback={(row: FlightRow) => {
-                    console.log('row', row.flight);
-                    setConfirm(true);
+                    console.log('flight--Number', row.flight);
                     setSelectedRow(row);
+                    setConfirm(true);
                 }}
             />
 
             {/*Add Flight form Dialog*/}
             {isAdd && (<AddFlightDialog
                 open={isAdd}
+                refreshFlights={fetchFlights}
                 onClose={() => setIsAdd(false)}
-                onAddFlight={handleAddFlight}
+                // outcome={outcome}
+                // setOutcome={setOutcome}
+                // onAddFlight={handleAddFlight}
             />)}
 
             {/*Confirm Flight removal Dialog*/}
@@ -93,7 +104,7 @@ const Flights = ({flightId}: FlightTableProps) => {
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
                 title="Remove Flight"
-                dataId={flightId}
+                dataId={selectedRow?.flight as string}
                 message={
                     <>
                         Are you sure you want to remove Flight<b>{selectedRow?.flight}</b>from the system?
@@ -102,8 +113,45 @@ const Flights = ({flightId}: FlightTableProps) => {
                 onRemove={handleOnRemove}
             />
 
-        </>
+        </RoleGuard>
     );
 }
 
 export default Flights;
+
+/*const handleAddFlight = (row: DataRow) => {
+        const result: SendResult = addFlight(row);
+
+        if (result.success) {
+            setOutcome({status: 'success', message: 'Flight added successfully',});
+            fetchFlights();
+            console.log("Flight added!");
+        } else {
+            setOutcome({status: 'error', message: result.error ?? ''});
+            console.log('Flight', result.error);
+        }
+    };
+
+    const rows: FlightRow[] = [
+    {
+        airlineName: "AA",
+        flightNumber: "AA3245",
+        terminal: "T2",
+        gate: "G5",
+        action: "Remove",
+    },
+    {
+        airlineName: "UA",
+        flightNumber: "UA9868",
+        terminal: "T9",
+        gate: "G9",
+        action: "Remove",
+    },
+    {
+        airlineName: "SA",
+        flightNumber: "SA1234",
+        terminal: "T7",
+        gate: "G4",
+        action: "Remove",
+    }
+];*/

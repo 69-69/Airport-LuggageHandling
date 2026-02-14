@@ -1,79 +1,57 @@
 'use client';
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Button, Container, Typography} from "@mui/material";
 import {Grid} from "@mui/system";
 import UITable from "@/components/uiTable";
 import {DataRow} from "@/types/dataRow";
 import PageTitleUpdater from "@/components/pageTitleUpdater";
 import MyBagDialog from "@/components/passenger/myBagDialog";
-import MyGateDialog from "@/components/passenger/myGateDialog";
 import {RoleEnum} from "@/types/userRole";
 import RoleGuard from "@/actions/roleGuard";
 import {useAuth} from "@/actions/authContext";
 import FullScreenLoader from "@/components/fullScreenLoader";
+import {Flight, FlightSnapshot} from "@/types/models";
+import {passengerService} from "@/actions/services/passengerService";
+import {flightService} from "@/actions/services/flightService";
 
 
 interface SummaryRow extends DataRow {
     flight: string;
     gate: string;
-    bag: number;
-}
-
-interface MyGateRow extends DataRow {
-    flight: string;
-    gate: string;
     terminal: string;
 }
 
-interface MyBagRow extends DataRow {
-    id: string;
-    currentLocation: string;
-}
-
-const columns = ["flight", "gate", "bag"];
-const rows: SummaryRow[] = [
-    {
-        flight: "AA3245",
-        gate: "G5",
-        bag: 234,
-    },
-    {
-        flight: "UA9868",
-        gate: "G9",
-        bag: 234,
-    },
-];
-
-const gateColumns = ["flight", "terminal", "gate"];
-const gateRows: MyGateRow[] = [
-    {
-        flight: "AA3245",
-        terminal: "T3",
-        gate: "G5",
-    },
-];
-
-const bagColumns = ["id", "current location"];
-const bagRows: MyBagRow[] = [
-    {
-        id: "AA3245",
-        currentLocation: "T5-G5",
-    },
-    {
-        id: "UA9868",
-        currentLocation: "T3-G9",
-    },
-];
-
-
 const PassengerDashboard = () => {
     const [openMyBags, setMyBags] = React.useState(false);
-    const  [openMyGate, setMyGate] = React.useState(false);
+    const [tickets, setTickets] = React.useState<string[]>([]);
+    const [flightSnapshots, setFlightSnapshots] = React.useState<Flight[]>([]);
     const {user, loading} = useAuth();
 
     if (loading) return <FullScreenLoader/>;
 
+    useEffect(() => {
+        const loadFlights = () => {
+            if (user?.username) {
+                // Passenger's 'username': Identification (Passport/Driver License)
+                const flightSnapshots: FlightSnapshot[] = passengerService.findSnapshotById(user.username);
+
+                const flightNumbers = flightSnapshots.map(f => f.flightNumber);
+                // NOTE: Auth 'user?.airline' field contains "flightNumber" for Passenger
+                const passFlights = flightService.getAllByFlightNumber(flightNumbers);
+                if (flightNumbers && passFlights) {
+                    setFlightSnapshots(passFlights);
+                }
+
+                const tickets = flightSnapshots.map(f => f.ticketNumber);
+                if(tickets) {
+                    setTickets(tickets);
+                }
+            }
+        };
+
+        loadFlights();
+    }, [user]);
 
     return (
         <RoleGuard allowedRoles={[RoleEnum.PASSENGER]}>
@@ -83,30 +61,25 @@ const PassengerDashboard = () => {
             <UITable<SummaryRow>
                 title='Passenger Dashboard'
                 name={user?.lastName}
-                columns={columns}
+                rows={(
+                    Array.isArray(flightSnapshots) ? flightSnapshots : []
+                ).map((f: Flight) => ({
+                    flight: f.flightNumber,
+                    gate: f.gate,
+                    terminal: f.terminal,
+                }) as SummaryRow)}
+                columns={["flight", "gate", "terminal"]}
                 topAlignment='justify'
-                rows={rows}
                 topButton={
                     <Container sx={{justifyContent: "space-between", mr: 0, pr: 0}}>
                         {/* Buttons */}
                         <Grid container rowSpacing={2} columnSpacing={{xs: 1, sm: 2, md: 2}} sx={{
                             justifyContent: "end"
                         }}>
-                            <Grid size={{xs: 12, md: 2}}>
-                                <Button
-                                    variant="outlined"
-                                    size="large"
-                                    sx={{
-                                        textTransform: 'none',
-                                        '&': {boxShadow: 3},
-                                    }}
-                                    onClick={() => setMyBags(true)}
-                                >
-                                    My Bags
-                                </Button>
+                            {/*<Grid size={{xs: 12, md: 2}}>
                             </Grid>
                             <Grid size={{xs: 12, md: 2}}>
-                                <Button
+                            <Button
                                     variant="outlined"
                                     size="large"
                                     sx={{
@@ -117,7 +90,18 @@ const PassengerDashboard = () => {
                                 >
                                     My Gate
                                 </Button>
-                            </Grid>
+                            </Grid>*/}
+                            <Button
+                                variant="outlined"
+                                size="large"
+                                sx={{
+                                    textTransform: 'none',
+                                    '&': {boxShadow: 3},
+                                }}
+                                onClick={() => setMyBags(true)}
+                            >
+                                My Bags
+                            </Button>
                         </Grid>
 
                         {/* Quick Actions */}
@@ -129,20 +113,19 @@ const PassengerDashboard = () => {
             />
 
             {/*My Bags Dialog*/}
-            {openMyBags && (<MyBagDialog<MyBagRow>
+            {openMyBags && (<MyBagDialog
                 open={openMyBags}
-                columns={bagColumns}
-                rows={bagRows}
+                tickets={tickets}
                 onClose={() => setMyBags(false)}
             />)}
 
             {/*My Gate Dialog*/}
-            {openMyGate && (<MyGateDialog<MyGateRow>
+            {/*{openMyGate && (<MyGateDialog<MyGateRow>
                 open={openMyGate}
                 columns={gateColumns}
                 rows={gateRows}
                 onClose={() => setMyGate(false)}
-            />)}
+            />)}*/}
         </RoleGuard>
     )
 }

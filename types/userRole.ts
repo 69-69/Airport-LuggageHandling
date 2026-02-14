@@ -1,3 +1,5 @@
+import {UserRole} from "@/types/models";
+
 export const securityClearance = 'security';
 
 export enum RoleEnum {
@@ -8,7 +10,12 @@ export enum RoleEnum {
     PASSENGER = 'PASSENGER',
 }
 
-export type UserRole = 'ADMIN' | 'AIRLINE' | 'GATE' | 'GROUND' | 'PASSENGER';
+export const StaffRoles = [
+    RoleEnum.AIRLINE,
+    RoleEnum.GATE,
+    RoleEnum.GROUND,
+];
+
 
 export const dashboardRedirectPath = ({role}: { role: UserRole }) => {
     const rolePaths: Record<UserRole, string> = {

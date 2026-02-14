@@ -1,13 +1,7 @@
 'use client';
 import * as React from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    Typography, DialogProps,
+    Typography
 } from '@mui/material';
 import Info from "@mui/icons-material/Info";
 import UiDialog from "@/components/uiDialog";

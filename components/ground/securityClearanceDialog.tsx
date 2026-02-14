@@ -6,7 +6,7 @@ import {
     Typography,
 } from '@mui/material';
 import UiDialog from "@/components/uiDialog";
-import {clearErrorAndSet, isNumeric} from "@/components/util";
+import {clearErrorAndSet, isNumeric} from "@/utils/util";
 
 interface ClearanceDialogProps {
     open: boolean;

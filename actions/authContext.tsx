@@ -1,21 +1,15 @@
 'use client';
 
 import React, {createContext, ReactNode, useContext, useEffect, useState} from 'react'
-import {UserRole} from "@/types/userRole";
 import {useRouter} from "next/navigation";
+import {AuthUser} from "@/types/models";
+import storageService from "@/actions/services/storageService";
 
-type User = {
-    role: UserRole;
-    username: string;
-    firstName: string;
-    lastName: string;
-    airlineCode?: string;
-    accessLevel?: string; // Gate (G1, G2, etc) or Security Clearance
-};
+const _KEY = "signed_in_user";
 
 type AuthContextType = {
-    user: User | null;
-    login: (user: User, remember?: boolean, redirectPath?: string) => void;
+    user: AuthUser | null;
+    login: (user: AuthUser, remember?: boolean, redirectPath?: string) => void;
     logout: (redirectPath?: string) => void;
     loading: boolean;
 };
@@ -26,16 +20,15 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({children}: { children: ReactNode }) => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
 
     // Restore session on first load
     useEffect(() => {
-        const storedUser =
-            localStorage.getItem("user") ||
-            sessionStorage.getItem("user");
+        // const storedUser = localStorage.getItem(_KEY) || sessionStorage.getItem(_KEY);
+        const storedUser = storageService.get<AuthUser>(_KEY, {} as AuthUser);
 
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            setUser(storedUser);
         }
 
         setLoading(false);
@@ -52,20 +45,19 @@ export const AuthProvider = ({children}: { children: ReactNode }) => {
     }
 
     // Login
-    const login = (user: User, remember = false, redirectPath?: string) => {
+    const login = (user: AuthUser, remember = false, redirectPath?: string) => {
         setUser(user);
 
-
-        const storage = remember ? localStorage : sessionStorage;
-        storage.setItem("user", JSON.stringify(user));
+        // const storage = remember ? localStorage : sessionStorage;
+        // storage.setItem(_KEY, JSON.stringify(user));
+        storageService.set<AuthUser>(_KEY, user, remember);
 
         _redirectPage(redirectPath);
     };
 
     const logout = (redirectPath?: string) => {
         setUser(null);
-        localStorage.removeItem("user");
-        sessionStorage.removeItem("user");
+        storageService.remove(_KEY);
 
         _redirectPage(redirectPath);
     }
