@@ -104,7 +104,7 @@ const Staffs = () => {
                         undone.
                     </>
                 }
-                onRemove={handleOnRemove}
+                onConfirm={handleOnRemove}
             />
             <AddStaffDialog
                 open={isAdd}

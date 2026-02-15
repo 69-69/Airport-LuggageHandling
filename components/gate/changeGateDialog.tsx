@@ -22,7 +22,7 @@ interface ChangeGateDialogProps {
     open: boolean;
     onClose: () => void;
     oldGate: string;
-    oldFlight: string;
+    selectedFlight: string;
     oldDestination: string;
     onChangeGate: (row: DataRow) => void;
     outcome?: OutcomeProps; // the *current value* of the outcome
@@ -35,7 +35,7 @@ const ChangeGateDialog = ({
                               outcome,
                               setOutcome,
                               oldGate,
-                              oldFlight,
+                              selectedFlight,
                               oldDestination,
                               onChangeGate,
                           }: ChangeGateDialogProps) => {
@@ -51,12 +51,12 @@ const ChangeGateDialog = ({
         if (newGate.length < 2) {
             return setOutcomeHelper('error', 'New Gate is required', setOutcome);
         }
-        // setOutcome('');
         onChangeGate({
             terminal: terminal,
-            newGate: newGate,
+            gate: newGate,
         });
 
+        // setOutcome(undefined);
         // onClose();
     };
 
@@ -72,7 +72,7 @@ const ChangeGateDialog = ({
             content={
                 <>
                     <Typography>
-                        <b>Flight:</b> {oldFlight.toUpperCase()}<br/>
+                        <b>Flight:</b> {selectedFlight.toUpperCase()}<br/>
                         <b>Current Gate:</b> {oldGate.toUpperCase()}<br/>
                         <b>Destination:</b> {toTitleCase(oldDestination)}
                     </Typography>

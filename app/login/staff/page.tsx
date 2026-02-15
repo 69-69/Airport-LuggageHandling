@@ -48,11 +48,21 @@ const StaffLoginForm = () => {
             }
 
             // Login success → store in AuthContext
-            login(result.user, true);
+            login(result.user, false);
 
             // First login flow
             if (result.user.firstLogin) {
                 setShowChangePassword(true);
+                return;
+            }
+
+            // Role-based Work Preference BEFORE redirect
+            if (result.user.role === RoleEnum.GATE) {
+                setGatePref(true);
+                return;
+            }
+            if (result.user.role === RoleEnum.GROUND) {
+                setWorkPref(true);
                 return;
             }
 
@@ -153,14 +163,14 @@ const StaffLoginForm = () => {
                 />)}
 
 
-                {/*WorkArea: Gate Preference Dialog*/}
+                {/*GATE: Staffs Gate Preference Dialog*/}
                 {showGatePref && (<GatePreferenceDialog
                     open={showGatePref}
                     onClose={() => setGatePref(false)}
                 />)}
 
 
-                {/*WorkArea: Gate Preference Dialog*/}
+                {/*GROUND: Work Preference Dialog: Work at Gate or Clearance*/}
                 {showWorkPref && (<WorkPreferenceDialog
                     open={showWorkPref}
                     onClose={() => setWorkPref(false)}

@@ -2,7 +2,7 @@ import React from "react";
 
 
 export type OutcomeProps = {
-    status: 'error' | 'success' | undefined;
+    status: 'error' | 'success' | 'warning' | undefined;
     message: string;
 }
 

@@ -42,7 +42,7 @@ export const flightService = {
         const idx = flights.findIndex(f => f.gate === flight.gate);
         if (idx !== -1) {
             const flight = flights[idx];
-            throw new Error(`Gate ${flight.gate} already in use flight ${flight.flightNumber}`);
+            throw new Error(`Gate ${flight.gate} already assigned to flight ${flight.flightNumber}`);
         }
 
         if (flights.some((f) => f.flightNumber === flight.flightNumber)) {
@@ -100,5 +100,23 @@ export const flightService = {
     remove(flightNumber: string) {
         const flights = this.getAll();
         storageService.set(_KEY, flights.filter((f) => f.flightNumber !== flightNumber));
+    },
+
+    removeTicket(flightNumber: string, ticket: string): void {
+        const flights = this.getAll();
+        const flight = flights.find(f => f.flightNumber === flightNumber);
+
+        if (!flight) throw new Error("Flight not found");
+
+        const initialLength = flight.tickets.length;
+
+        flight.tickets = flight.tickets.filter(t => t !== ticket);
+
+        if (flight.tickets.length === initialLength) {
+            throw new Error("Ticket not found on flight");
+        }
+
+        storageService.set(_KEY, flights);
     }
+
 }

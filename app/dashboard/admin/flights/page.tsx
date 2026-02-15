@@ -110,7 +110,7 @@ const Flights = () => {
                         Are you sure you want to remove Flight<b>{selectedRow?.flight}</b>from the system?
                     </>
                 }
-                onRemove={handleOnRemove}
+                onConfirm={handleOnRemove}
             />
 
         </RoleGuard>

@@ -12,7 +12,7 @@ export type User = {
     firstName: string;
     lastName: string;
     airline?: string;
-    accessLevel?: string; // Gate (G1, G2, etc) or Security Clearance
+    workMode?: string; // Gate (G1, G2, etc) or Security Clearance
     firstLogin: boolean;
 };
 
@@ -37,8 +37,8 @@ export type PassengerStatus = "NOT_CHECKED_IN" | "CHECKED_IN" | "BOARDED";
 
 export enum PassengerStatusEnum {
     NOT_CHECKED_IN = "NOT_CHECKED_IN",
-    CHECKED_IN="CHECKED_IN" ,
-    BOARDED="BOARDED"
+    CHECKED_IN = "CHECKED_IN",
+    BOARDED = "BOARDED"
 }
 
 export type Passenger = {
@@ -52,10 +52,18 @@ export type Passenger = {
 };
 
 export type BagLocation = "CHECKIN_COUNTER" | "SECURITY_CHECK" | "GATE" | "LOADED";
-    /*| { type: "CHECKIN_COUNTER"; terminal: string; counter: string } // When a passenger checks in a bag
-    | { type: "SECURITY_CHECK"; terminal: string; gate: string } // When the bag is at clearance
-    | { type: "GATE"; terminal: string; gate: string } // When the bag moves to the gate
-    | { type: "LOADED"; flightNumber: string }; // When the bag is loaded onto the plane*/
+
+export enum BagLocationEnum {
+    CHECKIN_COUNTER = "CHECKIN_COUNTER",
+    SECURITY_CHECK = "SECURITY_CHECK", // Security violation
+    LOADED = "LOADED", // Means Bag is loaded to the plane/flight
+    GATE = "GATE", // Means Bag is Cleared, no violation
+}
+
+/*| { type: "CHECKIN_COUNTER"; terminal: string; counter: string } // When a passenger checks in a bag
+| { type: "SECURITY_CHECK"; terminal: string; gate: string } // When the bag is at clearance or has violated
+| { type: "GATE"; terminal: string; gate: string } // When the bag is Cleared, then move to the gate
+| { type: "LOADED"; flightNumber: string }; // When the bag is loaded onto the plane*/
 
 export type Bag = {
     bagId: string;
@@ -90,7 +98,7 @@ export type AuthUser = {
     firstName: string;
     lastName: string;
     airline?: string;
-    accessLevel?: string; // Gate (G1, G2, etc) or Security Clearance
+    workMode?: string; // Gate (G1, G2, etc) or Security Clearance
     firstLogin: boolean;
 };
 

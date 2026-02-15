@@ -12,10 +12,12 @@ interface ConfirmFlightDialogProps {
     title: string;
     message: React.ReactNode;
     dataId: number | string;
-    onRemove: (proceed: boolean) => void;
+    onConfirm: (proceed: boolean) => void;
 }
 
-const ConfirmEntityDialog = ({open, onClose, title, message, dataId, onRemove} : ConfirmFlightDialogProps) => {
+const ConfirmEntityDialog = (
+    {open, onClose, title, message, dataId, onConfirm}: ConfirmFlightDialogProps
+) => {
     // const {open, onClose, flightId} = params;
 
     const [error, setError] = React.useState('');
@@ -27,7 +29,7 @@ const ConfirmEntityDialog = ({open, onClose, title, message, dataId, onRemove} :
         }
 
         setError('');
-        onRemove(true);
+        onConfirm(true);
     };
 
     return (
@@ -39,6 +41,7 @@ const ConfirmEntityDialog = ({open, onClose, title, message, dataId, onRemove} :
             content={
                 <>
                     <Typography
+                        component="div"
                         id="confirm-dialog-description"
                         sx={{
                             display: 'inline-flex',
@@ -47,7 +50,7 @@ const ConfirmEntityDialog = ({open, onClose, title, message, dataId, onRemove} :
                             flexWrap: 'wrap',
                         }}
                     >
-                        <Info fontSize="small" />
+                        <Info fontSize="small"/>
                         {message}
                     </Typography>
                     {error && (

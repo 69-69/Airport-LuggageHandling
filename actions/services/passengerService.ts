@@ -19,13 +19,27 @@ export const passengerService = {
 
         const newPassenger: Passenger = {
             ...passenger,
-            status: "NOT_CHECKED_IN"
+            status: PassengerStatusEnum.NOT_CHECKED_IN
         };
 
         passengers.push(newPassenger);
         storageService.set(_KEY, passengers);
 
         return newPassenger;
+    },
+
+    findByTicket(ticketNumber: string): Passenger {
+        const passengers: Passenger[] = this.getAll();
+
+        const passenger = passengers.find(
+            p => p.ticketNumber === ticketNumber
+        );
+
+        if (!passenger) {
+            throw new Error(`Passenger with ticket ${ticketNumber} does not exist`);
+        }
+
+        return passenger;
     },
 
     findByTicketAndIdNumber(ticketNumber: string, idNumber: string): Passenger {
@@ -88,7 +102,7 @@ export const passengerService = {
                     firstName: passenger.firstName,
                     lastName: passenger.lastName,
                     airline: passenger.flightNumber,
-                    accessLevel: 'Passenger',
+                    workMode: 'Passenger',
                     firstLogin: false
                 }
             };
@@ -112,7 +126,7 @@ export const passengerService = {
         const p = passengers.find(p => p.ticketNumber === ticketNumber);
         if (!p) throw new Error("Passenger not found");
 
-        p.status = "CHECKED_IN";
+        p.status = PassengerStatusEnum.CHECKED_IN;
         storageService.set(_KEY, passengers);
     },
 
@@ -124,7 +138,7 @@ export const passengerService = {
             throw new Error("Passenger must be checked in");
         }
 
-        p.status = "BOARDED";
+        p.status = PassengerStatusEnum.BOARDED;
         storageService.set(_KEY, passengers);
 
         return p;

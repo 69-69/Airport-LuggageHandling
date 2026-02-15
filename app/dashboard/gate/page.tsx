@@ -37,14 +37,21 @@ const columns = ["flight", "terminal", "gate", "destination", "departure", "pass
 
 const GateStaffDashboard = () => {
     const {user, loading} = useAuth();
-    const [isConfirm, setConfirm] = useState(false);
-    const [isConfirmDeparture, setConfirmDeparture] = useState(false);
-    const [isConfirmChanges, setConfirmChanges] = useState(false);
-    const [isOpenBoard, setOpenBoard] = useState(false);
-    const [openChangeGate, setChangeGate] = useState(false);
+
+    // Flight Departure
+    const [confirmDeparture, setConfirmDeparture] = useState(false);
+
+    // Change Flight Gate
+    const [confirmGateChange, setConfirmGateChange] = useState(false);
+    const [showGateChange, setShowGateChange] = useState(false);
     const [selectedRow, setSelectedRow] = useState<DataRow>();
     const [newGate, setNewGate] = useState<DataRow>();
+
+    // Passenger Boarding
+    const [showBoard, setShowBoard] = useState(false);
+    const [confirmBoard, setConfirmBoard] = useState(false);
     const [ticketNumber, setTicketNumber] = useState<string>('');
+
     const [flightRows, setFlightRows] = useState<Flight[]>([]);
     const [passenger, setPassenger] = React.useState<Passenger>();
 
@@ -53,8 +60,14 @@ const GateStaffDashboard = () => {
     // Fetch Flight list
     const fetchFlights = () => {
         try {
+            // const airlineCode = user?.airline?.split(" - ")[0];
             const res: Flight[] = flightService.getAll();
-            const gateFlights: Flight[] = res.filter((f: Flight) => f.gate === user?.accessLevel)
+            const gateFlights: Flight[] = res.filter(
+                (f: Flight) =>
+                    f.gate === user?.workMode &&
+                    f.airlineName === user?.airline
+            );
+
             setFlightRows(gateFlights);
         } catch (e) {
             console.error("Error fetching staff rows:", e);
@@ -64,47 +77,54 @@ const GateStaffDashboard = () => {
     // Initial fetch
     useEffect(() => fetchFlights(), []);
 
-    /// Confirm Departure Implementation
-    const onConfirmDeparture = (success: boolean) => {
-        if (success) {
-
-            console.log('Confirm Departure successful', success);
-        }
-    }
-
+    // Onboarding
     const handleBoarding = (proceed: boolean) => {
-
-        if (isConfirm) {
+        if (proceed) {
             try {
                 const passenger = passengerService.board(ticketNumber);
                 if (!passenger) {
-                    setConfirm(false);
+                    setConfirmBoard(false);
                     setPassenger(undefined);
-
                     return setOutcomeHelper('error', "Passenger not found or not checked-in", setOutcome);
                 }
 
                 setOutcomeHelper('success', "Passenger onboard", setOutcome);
                 setPassenger(passenger);
 
-                setConfirm(false);
+                setConfirmBoard(false);
+                setTicketNumber('');
             } catch (err) {
                 setOutcomeHelper('error', err instanceof Error ? err.message : "Passenger must be checked in", setOutcome);
-                setConfirm(false);
+                setConfirmBoard(false);
                 setPassenger(undefined);
             }
         }
     }
 
-    const handleGateChanges = (choice: boolean) => {
-        console.log('Steve-Change Gate from:', choice, newGate?.terminal, newGate?.newGate);
+    // Flight Gate Change
+    const handleGateChanges = (proceed: boolean) => {
+        console.log('Steve-Change Gate from:', proceed, newGate?.terminal, newGate?.gate);
 
-        if (isConfirm && newGate?.terminal && user) {
+        if (proceed && newGate?.terminal && user) {
             console.log('updating-flight gate');
 
             try {
+                const existing = flightService.getAll().find(
+                    f => f.terminal === newGate.terminal &&
+                        f.gate === newGate.gate &&
+                        f.flightNumber === selectedRow?.flight
+                );
+
+                if (existing) {
+                    setConfirmGateChange(false);
+                    return setOutcomeHelper('error',
+                        `Gate ${newGate.terminal}-${newGate.gate} is already assigned to flight ${existing.flightNumber}`,
+                        setOutcome
+                    );
+                }
+
                 const flight = flightService.changeGate(
-                    newGate.flight as string,
+                    flightRows[0].flightNumber as string,
                     {
                         gate: newGate.gate as string,
                         terminal: newGate.terminal as string,
@@ -112,21 +132,24 @@ const GateStaffDashboard = () => {
                 );
 
                 if (!flight) {
-                    setConfirmChanges(false);
+                    setConfirmGateChange(false);
                     setPassenger(undefined);
 
                     return setOutcomeHelper('error', "Flight not found", setOutcome);
                 }
 
-                setOutcomeHelper('success', "Flight gate and terminal changed successfully", setOutcome);
-                // setPassenger(flight);
+                let selectedFlight = selectedRow?.flight;
+                let oldGate = selectedRow?.terminal + '-' + selectedRow?.gate;
+                let chosenGate = newGate?.terminal + '-' + newGate?.gate;
 
-                // Inform Ground Staff via MessageBoard
+                setOutcomeHelper('success', `Flight ${selectedFlight} gate changed from: ${oldGate} to ${chosenGate}`, setOutcome);
+
+                // Notify Ground Staff via MessageBoard
                 messageBoardService.post({
                     role: RoleEnum.GROUND as UserRole,
                     msg: {
                         message: "Gate Change Notice:\n" +
-                            `Flight ${selectedRow?.flight} moved from ${selectedRow?.terminal + '-' + selectedRow?.gate} to ${newGate?.terminal + '-' + newGate?.newGate}.` +
+                            `Flight ${selectedFlight} moved from ${oldGate} to ${chosenGate}.` +
                             "All future bags must be routed to the new gate.\n",
                         to: RoleEnum.GROUND as UserRole,
                         fromRole: user?.role,
@@ -134,10 +157,10 @@ const GateStaffDashboard = () => {
                     } as MessageBoard
                 })
 
-                setConfirmChanges(false);
+                setConfirmGateChange(false);
             } catch (err) {
                 setOutcomeHelper('error', err instanceof Error ? err.message : "Flight not found", setOutcome);
-                setConfirmChanges(false);
+                setConfirmGateChange(false);
                 setPassenger(undefined);
             }
         }
@@ -151,7 +174,7 @@ const GateStaffDashboard = () => {
 
             <UITable<GateFlightRow>
                 title='Gate Staff Dashboard'
-                name={user?.lastName + (user?.accessLevel ? ' at GATE: ' + user.accessLevel : '')}
+                name={toTitleCase(user?.lastName ?? 'Staff') + (user?.workMode ? ' at GATE: ' + user.workMode : '')}
                 columns={columns}
                 topAlignment='justify'
                 rows={(Array.isArray(flightRows) ? flightRows : []).map((f: Flight) => (
@@ -181,7 +204,7 @@ const GateStaffDashboard = () => {
                                             '&': {boxShadow: 3},
                                         }}
                                         onClick={() => {
-                                            setOpenBoard(true);
+                                            setShowBoard(true);
                                             setOutcome(undefined);
                                         }}
                                     >
@@ -208,43 +231,43 @@ const GateStaffDashboard = () => {
 
                             {/* Quick Actions */}
                             <Typography variant="h6" component="h4" fontWeight='normal' gutterBottom>
-                                [ Flights at Gate <b>{user?.accessLevel}</b> ]
+                                [ Flights at Gate <b>{user?.workMode}</b> ]
                             </Typography>
                         </Container>
                     ) : null
                 }
                 onActionCallback={(row: GateFlightRow) => {
                     console.log('Set Change Gate', row.flight);
-                    setChangeGate(true);
+                    setShowGateChange(true);
                     setSelectedRow(row);
                 }}
             />
 
             {/*Confirm Departure Dialog*/}
-            {isConfirmDeparture && (<ConfirmDepartureDialog
-                open={isConfirmDeparture}
-                recipientId={'1'}
+            {confirmDeparture && (<ConfirmDepartureDialog
+                open={confirmDeparture}
+                flight={flightRows[0]}
+                user={user}
                 onClose={() => setConfirmDeparture(false)}
-                onConfirmDeparture={onConfirmDeparture}
             />)}
 
             {/*Boarding Dialog*/}
-            {isOpenBoard && (<BoardDialog
-                open={isOpenBoard}
-                onClose={() => setOpenBoard(false)}
+            {showBoard && (<BoardDialog
+                open={showBoard}
+                onClose={() => setShowBoard(false)}
                 outcome={outcome}
                 setOutcome={setOutcome}
                 passenger={passenger}
                 onBoard={(row) => {
-                    setConfirm(true);
+                    setConfirmBoard(true);
                     setTicketNumber(row);
                 }}
             />)}
 
             {/*Confirm Boarding Dialog*/}
-            {isConfirm && (<ConfirmEntityDialog
-                open={isConfirm}
-                onClose={() => setConfirm(false)}
+            {confirmBoard && (<ConfirmEntityDialog
+                open={confirmBoard}
+                onClose={() => setConfirmBoard(false)}
                 title="Confirm Boarding"
                 dataId={ticketNumber}
                 message={
@@ -252,41 +275,40 @@ const GateStaffDashboard = () => {
                         Confirm boarding for passenger with Ticket<strong>{ticketNumber}</strong>
                     </>
                 }
-                onRemove={handleBoarding}
+                onConfirm={handleBoarding}
             />)}
 
 
             {/*Change Passenger Gate Info Dialog*/}
-            {openChangeGate && (<ChangeGateDialog
-                open={openChangeGate}
-                oldFlight={selectedRow?.flight as string}
+            {showGateChange && (<ChangeGateDialog
+                open={showGateChange}
+                selectedFlight={selectedRow?.flight as string}
                 oldGate={selectedRow?.terminal + '-' + selectedRow?.gate}
                 oldDestination={selectedRow?.destination as string}
                 outcome={outcome}
                 setOutcome={setOutcome}
-                onClose={() => setChangeGate(false)}
+                onClose={() => setShowGateChange(false)}
                 onChangeGate={(row) => {
-                    setConfirmChanges(true);
+                    setConfirmGateChange(true);
                     setNewGate(row);
                 }}
             />)}
 
             {/*Confirm Change Gate & Terminal Dialog*/}
-            {isConfirmChanges && (<ConfirmEntityDialog
-                open={isConfirmChanges}
-                onClose={() => setConfirmChanges(false)}
+            {confirmGateChange && (<ConfirmEntityDialog
+                open={confirmGateChange}
+                onClose={() => setConfirmGateChange(false)}
                 title="Confirm Gate Changes"
                 dataId={selectedRow?.flight as string}
                 message={
                     <>
                         Are you sure you want to change the gate for Flight<b>{selectedRow?.flight}</b> from:
                         <b style={{color: 'red'}}>{selectedRow?.terminal}-{selectedRow?.gate}</b>
-                        to <b style={{color: 'green'}}>{newGate?.terminal}-{newGate?.newGate}</b>
+                        to <b style={{color: 'green'}}>{newGate?.terminal}-{newGate?.gate}</b>
                     </>
                 }
-                onRemove={handleGateChanges}
+                onConfirm={handleGateChanges}
             />)}
-            {/*</Box>*/}
         </RoleGuard>
     )
 }

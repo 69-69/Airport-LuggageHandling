@@ -4,17 +4,14 @@ import * as React from 'react';
 import UiDialog from "@/components/uiDialog";
 import UITable from "@/components/uiTable";
 import {DataRow} from "@/types/dataRow";
-import {useEffect} from "react";
-import {Bag, FlightSnapshot} from "@/types/models";
-import {passengerService} from "@/actions/services/passengerService";
-import {flightService} from "@/actions/services/flightService";
+import {Bag} from "@/types/models";
 import {bagService} from "@/actions/services/bagService";
 
 interface MyBagRow extends DataRow {
     id: string;
     weight: string;
     ticket: string;
-    location: string
+    status: string
 }
 
 interface MyBagDialogProps {
@@ -37,7 +34,7 @@ const MyBagDialog = ({open, onClose, tickets}: MyBagDialogProps) => {
         id: b.bagId,
         weight: `${b.weight} kg`,
         ticket: b.ticketNumber,
-        location: b.location as string,
+        status: b.location as string,
     }));
 
     return (
@@ -51,7 +48,7 @@ const MyBagDialog = ({open, onClose, tickets}: MyBagDialogProps) => {
                 <UITable<MyBagRow>
                     comp="span"
                     topAlignment="justify"
-                    columns={["id", "weight", "ticket", "location"]}
+                    columns={["id", "weight", "ticket", "status"]}
                     rows={bagRows}
                 />
             }

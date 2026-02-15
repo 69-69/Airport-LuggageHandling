@@ -26,7 +26,7 @@ export const authService = {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 airline: user.airline,
-                accessLevel: user.accessLevel,
+                workMode: user.workMode,
                 firstLogin: user.firstLogin
             }
         };

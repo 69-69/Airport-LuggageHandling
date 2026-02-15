@@ -20,9 +20,9 @@ const GroundDashboard = () => {
             <PageTitleUpdater/>
 
             {/*Switch between Pages */}
-            {user?.accessLevel === securityClearance
-                ? <WorkAtClearanceDashboard lastName={user.lastName}/>
-                : <WorkAtGateDashboard lastName={user?.lastName ?? ''}/>}
+            {user?.workMode === securityClearance
+                ? <WorkAtClearanceDashboard user={user}/>
+                : <WorkAtGateDashboard user={user}/>}
         </RoleGuard>
     )
 }

@@ -34,11 +34,11 @@ const OnBoardTable = () => {
     // Fetch Passenger list
     const fetchPassengers = () => {
         try {
-            if (!user?.airline || !user?.accessLevel) return;
+            if (!user?.airline || !user?.workMode) return;
 
             const airlineCode = user.airline.split(" - ")[0];
 
-            const flight = flightService.findByAirlineCodeAndGate(airlineCode, user.accessLevel);
+            const flight = flightService.findByAirlineCodeAndGate(airlineCode, user.workMode);
 
             if (!flight) return;
 

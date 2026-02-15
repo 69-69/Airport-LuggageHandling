@@ -19,6 +19,7 @@ import {useAuth} from "@/actions/authContext";
 interface PostDialogProps {
     // role?: UserRole;
     open: boolean;
+    isSecurityViolation?: boolean;
     onClose: () => void;
     outcome?: OutcomeProps; // the *current value* of the outcome
     setOutcome: React.Dispatch<React.SetStateAction<OutcomeProps | undefined>>; // the *setter* for updating it
@@ -28,6 +29,7 @@ interface PostDialogProps {
 const MessageDialog = ({
                            // role,
                            open,
+                           isSecurityViolation,
                            onClose,
                            onPost,
                            outcome,
@@ -72,13 +74,14 @@ const MessageDialog = ({
         // If everything is valid, set success message
         setOutcomeHelper('success', 'Message sent successfully!', setOutcome);
 
+        let who = isAdmin || isSecurityViolation;
         onPost({
             message,
             // Admin specifies 'Recipient'; but other staffs messages are auto-assign
-            to: isAdmin ? to : user?.role,
+            to: who ? to : user?.role,
             fromRole: user?.role,
             // Admin specifies 'airlineName'; but other staffs messages are auto-assign
-            airline: isAdmin ? airlineName : user?.airline,
+            airline: who? airlineName : user?.airline,
         });
 
         // Reset form immediately
@@ -122,12 +125,14 @@ const MessageDialog = ({
                             },
                         }}
                     />
-                    {isAdmin && (
+                    {isAdmin || isSecurityViolation && (
                         <>
                             <AutocompleteDropdown
-                                label="Department" data={StaffRoles}
+                                label="Department"
+                                data={isSecurityViolation ? [StaffRoles[0]] : StaffRoles}
                                 helperText="Recipient department"
                                 value={to}
+                                disabled={isSecurityViolation && to.length>0}
                                 onChange={clearOutcomeErrorString(setTo, setOutcome)}
                             />
                             {to && (

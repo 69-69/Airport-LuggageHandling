@@ -12,18 +12,19 @@ import {UserRole} from "@/types/models";
 interface HeaderProps {
     role?: UserRole;
     username?: string;
-    accessLevel?: string;
+    workMode?: string;
     airline?: string;
     onLogout?: (redirectPath?: string) => void;
 }
 
-const Header = ({username, role, airline, onLogout, accessLevel}: HeaderProps) => {
+const Header = ({username, role, airline, onLogout, workMode}: HeaderProps) => {
     const tagName = (role as RoleEnum) !== RoleEnum.ADMIN && airline ? airline : role;
     // tagName = manualAirlines.find(a=>a.startsWith(airlineCode)) ?? airlineCode;
 
     const handleLogout = async () => {
+        const id = Math.floor(Date.now() / 1000);
         if (onLogout) {
-            onLogout('/');
+            onLogout(`/?logout=${id}`);
         }
     }
     return (
@@ -35,7 +36,7 @@ const Header = ({username, role, airline, onLogout, accessLevel}: HeaderProps) =
                 {username && (
                     <Box>
                         <Typography component="span" sx={{mr: 2}}>
-                            {tagName?.toUpperCase()} | {accessLevel && (toSentenceCase(accessLevel) + ' | ')} {toSentenceCase(username)}
+                            {tagName?.toUpperCase()} | {workMode && (toSentenceCase(workMode) + ' | ')} {toSentenceCase(username)}
                         </Typography>
                         <Button color="inherit" variant="outlined" size="small" sx={{textTransform: 'none'}}
                                 onClick={handleLogout}>

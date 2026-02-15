@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Box, Button, Typography} from "@mui/material";
 import {Grid, Stack} from "@mui/system";
 import AddFlightDialog from "@/components/admin/addFlightDialog";
@@ -11,14 +11,37 @@ import AddStaffDialog from "@/components/admin/addStaffDialog";
 import PageTitleUpdater from "@/components/pageTitleUpdater";
 import {RoleEnum} from "@/types/userRole";
 import RoleGuard from "@/actions/roleGuard";
-import {SendResult} from "@/types/models";
+import {Flight, Passenger, SendResult, User} from "@/types/models";
 import {OutcomeProps} from "@/utils/util";
+import {flightService} from "@/actions/services/flightService";
+import {passengerService} from "@/actions/services/passengerService";
+import {userService} from "@/actions/services/userService";
 
 const AdminDashboard = () => {
     const [outcome, setOutcome] = React.useState<OutcomeProps>();
     const [isOpenFlight, setOpenFlight] = React.useState(false);
     const [isOpenPassenger, setOpenPassenger] = React.useState(false);
     const [isOpenStaff, setOpenStaff] = React.useState(false);
+    const [totalActiveFlights, setTotalActiveFlights] = React.useState<number>(0);
+    const [totalPassengers, setTotalPassengers] = React.useState<number>(0);
+    const [totalStaffs, setTotalStaffs] = React.useState<number>(0);
+
+    const getMetrics = () => {
+        try {
+            const flights: Flight[] = flightService.getAll();
+            const passengers: Passenger[] = passengerService.getAll();
+            const users: User[] = userService.getAll();
+
+            setTotalActiveFlights(flights.length);
+            setTotalPassengers(passengers.length);
+            setTotalStaffs(users.length);
+        } catch (e) {
+            console.error("Error fetching staff rows:", e);
+        }
+    };
+
+    // Initial fetch
+    useEffect(() => getMetrics(), []);
 
     const handleAddStaff = async (row: DataRow) => {
         const result: SendResult = await addStaff(row);
@@ -94,9 +117,9 @@ const AdminDashboard = () => {
                         {/* Add your system info here */}
                         <Stack spacing={2} component="ul" sx={{listStyle: 'none', p: 0, m: 0, alignItems: 'start'}}>
                             {[
-                                {label: 'Active Flights', data: 267},
-                                {label: 'Passengers Today', data: 800},
-                                {label: 'Staff Accounts', data: 30},
+                                {label: 'Active Flights', data: totalActiveFlights},
+                                {label: 'Passengers Today', data: totalPassengers},
+                                {label: 'Staff Accounts', data: totalStaffs},
                             ].map((action) => (
                                 <li key={action.label}>
                                     <Button

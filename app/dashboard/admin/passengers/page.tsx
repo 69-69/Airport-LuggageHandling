@@ -1,8 +1,8 @@
 'use client';
 
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import UITable from "@/components/uiTable";
-import {Button} from "@mui/material";
+import {Button, Typography} from "@mui/material";
 import ConfirmEntityDialog from "@/components/confirmEntityDialog";
 import AddPassengerDialog from "@/components/admin/addPassengerDialog";
 import {DataRow} from "@/types/dataRow";
@@ -13,6 +13,7 @@ import {bagService} from "@/actions/services/bagService";
 import {RoleEnum} from "@/types/userRole";
 import PageTitleUpdater from "@/components/pageTitleUpdater";
 import RoleGuard from "@/actions/roleGuard";
+import {flightService} from "@/actions/services/flightService";
 
 interface PassengerRow extends DataRow {
     name: string;
@@ -27,11 +28,11 @@ const columns = ["name", "ticket", "flight", "status", "bags", "action"];
 
 const Passengers = () => {
 
-    // const [outcome, setOutcome] = React.useState<OutcomeProps>();
-    const [isConfirm, setConfirm] = React.useState(false);
-    const [selectedRow, setSelectedRow] = React.useState<DataRow>();
-    const [isAdd, setIsAdd] = React.useState(false);
-    const [passengerRows, setPassengerRows] = React.useState<Passenger[]>([]);
+    const [error, setError] = React.useState('');
+    const [isConfirm, setConfirm] = useState(false);
+    const [selectedRow, setSelectedRow] = useState<DataRow>();
+    const [isAdd, setIsAdd] = useState(false);
+    const [passengerRows, setPassengerRows] = useState<Passenger[]>([]);
 
     // Fetch Passenger list
     const fetchPassengers = () => {
@@ -49,18 +50,34 @@ const Passengers = () => {
     useEffect(() => fetchPassengers(), []);
 
     const handleOnRemove = (proceed: boolean) => {
-        if (proceed && selectedRow?.ticket !== null) {
-            const ticket = selectedRow?.ticket as string;
+        if (!proceed || !selectedRow?.ticket) return;
+
+        try {
+            const ticket = selectedRow.ticket as string;
+            const flightNumber = selectedRow.flight as string;
+
+            // 1️⃣ Validate flight/ticket relation first
+            flightService.removeTicket(flightNumber, ticket);
+
+            // 2️⃣ Then delete dependent data
             passengerService.remove(ticket);
             bagService.remove(ticket);
+
             fetchPassengers();
-            setConfirm(false); // UI state stays on client
+            setConfirm(false);
+
+        } catch (error) {
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('Something went wrong');
+            }
         }
     };
 
     return (
         <RoleGuard allowedRoles={[RoleEnum.ADMIN]}>
-            <PageTitleUpdater />
+            <PageTitleUpdater/>
             <UITable<PassengerRow>
                 columns={columns}
                 rows={(Array.isArray(passengerRows) ? passengerRows : []).map(p => ({
@@ -73,9 +90,16 @@ const Passengers = () => {
                 }))}
                 title="Passenger Management"
                 topButton={
-                    <Button variant="outlined" sx={{textTransform: 'none'}} onClick={() => setIsAdd(true)}>
-                        Add Passenger
-                    </Button>
+                    <>
+                        <Button variant="outlined" sx={{textTransform: 'none'}} onClick={() => setIsAdd(true)}>
+                            Add Passenger
+                        </Button>
+                        {error && (
+                            <Typography color="error" variant="body2" sx={{mb: 1}}>
+                                {error}
+                            </Typography>
+                        )}
+                    </>
                 }
                 onActionCallback={(row: PassengerRow) => {
                     console.log('row', row.flight);
@@ -94,7 +118,7 @@ const Passengers = () => {
                         flight<b>{selectedRow?.flight}</b>.This action cannot be undone.
                     </>
                 }
-                onRemove={handleOnRemove}
+                onConfirm={handleOnRemove}
             />
             <AddPassengerDialog
                 open={isAdd}

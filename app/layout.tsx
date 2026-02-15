@@ -42,7 +42,7 @@ const AppShell = ({children}: { children: React.ReactNode }) => {
                             }
                             role={user.role}
                             airline={user.airline}
-                            accessLevel={user.accessLevel}
+                            workMode={user.workMode}
                             onLogout={logout}
                         />
                         <Sidebar role={user.role} isMobile={isMobile}/>

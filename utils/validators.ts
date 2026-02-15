@@ -1,6 +1,12 @@
 // utils/validators.ts
 import {OutcomeProps} from "@/utils/util";
 
+// Airline letters + exactly 4 digits (AA1234)
+export const flightRegex = /\b[A-Za-z]{2,}\d{4}\b/g;
+
+// Terminal-Gate pattern (T1-G1, T7-G3)
+export const gateRegex = /\bT\d+-G\d+\b/g;
+
 export const validateTicketNumber = (ticket: string): boolean =>
     /^\d{10}$/.test(ticket);
 
@@ -76,5 +82,6 @@ export const formatTime = (value: string)=>  {
         minute: '2-digit',
     });
 }
+
 
 

@@ -91,10 +91,22 @@ const MessageBoardTable = () => {
     // Initial fetch
     useEffect(() => fetchMessages(), []);
 
+    const formatMessage = (text: string) => {
+        const regex = /\b([A-Za-z]{2,}\d{4}|t\d+-g\d+)\b/;
+
+        return text.split(/(\b[A-Za-z]{2,}\d{4}\b|\bt\d+-g\d+\b)/g)
+            .map((part, index) =>
+                regex.test(part) ? (
+                    <strong key={index}>{part.toUpperCase()}</strong>
+                ) : (
+                    part
+                )
+            );
+    };
 
     return (
         <RoleGuard allowedRoles={[RoleEnum.ADMIN, RoleEnum.AIRLINE, RoleEnum.GATE, RoleEnum.GROUND]}>
-            <PageTitleUpdater />
+            <PageTitleUpdater/>
             {/*<Box component="section" sx={{p: 2, ml: {md: 30}, width: {xs: '100%', sm: '80%', md: '80%',}}}>*/}
 
             <UITable<MessageRow>
@@ -103,10 +115,14 @@ const MessageBoardTable = () => {
                 rows={(Array.isArray(messages) ? messages : []).map((msg: MessageBoard) => (
                     {
                         message: <>
-                            {toSentenceCase(msg.message)}<br/>
-                            <span
-                                style={{color: "gray"}}>(from: {toTitleCase(msg.fromRole === user?.role ? "You" : msg.fromRole)}) @ {formatTime(msg.timestamp)}</span>
+                            {formatMessage(toSentenceCase(msg.message))}
+                            <br/>
+                            <span style={{color: "gray"}}>
+                                (from: {toTitleCase(msg.fromRole === user?.role ? "You" : msg.fromRole)})
+                                {" @ "} {formatTime(msg.timestamp)}
+                            </span>
                         </>,
+
                         id: msg.id, // uSed but never displayed in the UI
                         isRead: msg.isRead, // uSed but never displayed in the UI
                         department: msg.to?.toUpperCase() ?? 'N/A',
@@ -146,7 +162,7 @@ const MessageBoardTable = () => {
                         it.
                     </>
                 }
-                onRemove={handleOnRemove}
+                onConfirm={handleOnRemove}
             />
             <MessageDialog
                 // role={user?.role}

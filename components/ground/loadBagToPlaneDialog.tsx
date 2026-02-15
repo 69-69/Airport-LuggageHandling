@@ -73,31 +73,6 @@ const LoadBagToPlaneDialog = ({
             confirmLabel={'Load Bags to Plane'}
             content={
                 <>
-                    <TextField
-                        label="Bag ID"
-                        type="text"
-                        fullWidth
-                        size="small"
-                        value={bagId}
-                        disabled={bagId.length==6}
-                        onChange={clearErrorAndSet(setBagId, setError)}
-                        slotProps={{
-                            input: {
-                                id: 'bag-id',
-                                startAdornment: inputAdornment,
-                                inputProps: {minLength: 6, maxLength: 6}
-                            },
-                        }}
-                    />
-
-                    {/*
-                        if (selectLocation === 'loaded')
-                            SHOW: (Airlines abbreviation - 2 letters and 4-digit flight number)
-                        else if (selectLocation === 'gate')
-                            SHOW: (Terminal and gate number)
-                        else if (selectLocation === 'Check-in counter')
-                            SHOW: (Terminal and counter number)
-                    */}
                     <AutocompleteDropdown
                         label="Location" data={[' ',...bagLocations]}
                         value={location}
@@ -113,6 +88,23 @@ const LoadBagToPlaneDialog = ({
                             {error}
                         </Typography>
                     )}
+                    {/*<TextField
+                        label="Bag ID"
+                        type="text"
+                        fullWidth
+                        size="small"
+                        value={bagId}
+                        disabled={bagId.length==6}
+                        onChange={clearErrorAndSet(setBagId, setError)}
+                        slotProps={{
+                            input: {
+                                id: 'bag-id',
+                                startAdornment: inputAdornment,
+                                inputProps: {minLength: 6, maxLength: 6}
+                            },
+                        }}
+                    />*/}
+
                 </>
             }/>
     );

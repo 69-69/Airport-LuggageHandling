@@ -1,109 +1,145 @@
 'use client';
 
-import React, {useEffect} from "react";
-import UITable from "@/components/uiTable";
+import React, {useEffect, useState} from 'react';
 import {Typography} from "@mui/material";
-import ConfirmEntityDialog from "@/components/confirmEntityDialog";
-import {addFlight, fetchOnBoardData, removeStaff} from "@/actions/endpoints";
+import UITable from "@/components/uiTable";
 import {DataRow} from "@/types/dataRow";
-import {useParams} from "next/navigation";
+import {AuthUser, Bag, BagLocationEnum, Flight} from "@/types/models";
+import {flightService} from "@/actions/services/flightService";
+import {toTitleCase} from "@/utils/util";
+import {bagService} from "@/actions/services/bagService";
+import {formatTime} from "@/utils/validators";
 import ClearanceDialog from "@/components/ground/securityClearanceDialog";
 
-interface ClearanceRow extends DataRow {
+
+interface BaggageRow extends DataRow {
     bagId: string;
     flight: string;
+    destination: string;
+    departure: string;
     ticket: string;
+    weight: string;
+    gate: string;
+    terminal: string;
     status: string;
     action: string;
+    // passengers: number;
 }
 
-const columns = ["bag id", "flight", "ticket", "status", "action"];
-const rows: ClearanceRow[] = [
-    {
-        bagId: "123654",
-        flight: "AA3245",
-        ticket: "7352841936",
-        status: "Pending",
-        action: "Clearance",
-    },
-    {
-        bagId: "543212",
-        flight: "AA3245",
-        ticket: "2349263712",
-        status: "Cleared",
-        action: "Clearance",
-    },
-];
+const columns = ["bag id", "weight", "flight", "destination", "departure", "ticket", "gate", "terminal", "status", "action"];
 
-const WorkAtClearanceDashboard = ({lastName}:{lastName: string}) => {
-    const params = useParams();
-    const flight_id = params?.flight_id as string;
+const WorkAtClearanceDashboard = ({user}: { user: AuthUser | null }) => {
 
-    const [data, setData] = React.useState([]);
-    const [selectedRow, setSelectedRow] = React.useState<ClearanceRow>();
-    const [isConfirm, setConfirm] = React.useState<boolean>(false);
+    // const [isConfirm, setConfirm] = React.useState<boolean>(false);
     const [showClearance, setShowClearance] = React.useState<boolean>(false);
+    const [selectedRow, setSelectedRow] = React.useState<DataRow>();
+    const [rows, setRows] = useState<BaggageRow[]>([]);
+    const [flight, setFlight] = useState<Flight>();
+    // const [outcome, setOutcome] = React.useState<OutcomeProps>();
 
-    const handleOnRemove = async (proceed: boolean) => {
-        console.log('proceed', proceed);
-        await removeStaff(flight_id);
+    // Fetch Flight list
+    const fetchFlights = () => {
+        try {
+            // const airlineCode = user?.airline?.split(" - ")[0];
+            if (!user?.workMode) return;
+
+            const flights: Flight[] = flightService.getAll();
+
+            // Ground staff only restricted by gate (NOT airline)
+            const gateFlights = flights.filter(
+                (f: Flight) => f.airlineName === user.airline
+            );
+
+            if (!gateFlights.length) {
+                setRows([]);
+                return;
+            }
+
+            const flight = gateFlights[0];
+            setFlight(flight);
+
+            const bags: Bag[] = bagService.getAllByTickets(flight.tickets)
+                .filter((b) =>
+                    b.location === BagLocationEnum.CHECKIN_COUNTER
+                    || b.location === BagLocationEnum.SECURITY_CHECK
+                );
+
+            const mappedRows: BaggageRow[] = bags.map((b) => ({
+                bagId: b.bagId.toString(),
+                weight: b.weight + " kg",
+                flight: flight.flightNumber.toUpperCase(),
+                destination: toTitleCase(flight.destination),
+                departure: formatTime(flight.departureTime),
+                ticket: b.ticketNumber,
+                gate: flight.gate.toUpperCase(),
+                terminal: flight.terminal.toUpperCase(),
+                status: b.location as string,
+                action: "Change Bag Status"
+                // passengers: flight.tickets?.length ?? 0,
+            }));
+
+            setRows(mappedRows);
+        } catch (e) {
+            console.error("Error fetching staff rows:", e);
+        }
     };
 
-    const handleClearance =(bagId: string)=>{
-        setConfirm(true);
-
-        console.log('bagId', bagId);
-    }
-
-    useEffect(() => {
-        if (!flight_id) return;
-
-        fetchOnBoardData()
-            .then(setData)
-            .catch(console.error);
-    }, [flight_id]); // dependency array
-
+    // Initial fetch
+    useEffect(() => fetchFlights(), []);
 
     return (
         <>
-            <UITable<ClearanceRow>
+            <UITable<BaggageRow>
+                topAlignment='center'
+                title='Security Clearance Dashboard'
+                name={toTitleCase(user?.lastName ?? 'Staff') + (user?.workMode ? ' at ' + toTitleCase(user.workMode) : '')}
                 columns={columns}
                 rows={rows}
-                title='Security Clearance Dashboard'
-                name={lastName}
-                topAlignment='center'
                 topButton={
-                    <Typography variant="h6" sx={{fontWeight: 'normal'}} gutterBottom>
-                        [ Bags at Gate ]
+                    <Typography variant="h6" component="h4" fontWeight="normal" align="left" gutterBottom>
+                        [ Bags Inspection: <b>Flight {flight?.flightNumber}</b> ]
                     </Typography>
                 }
                 onActionCallback={(row) => {
                     setSelectedRow(row);
                     setShowClearance(true);
+                    // setOutcome(undefined);
+                    // setConfirm(true);
                 }}
             />
-            {/*Security Clearance Form*/}
+
             <ClearanceDialog
                 open={showClearance}
                 onClose={() => setShowClearance(false)}
-                onClearance={handleClearance}
+                reloadData={fetchFlights}
+                selectedRow={selectedRow}
+                terminal={flight?.terminal}
+                gate={flight?.gate}
             />
 
-            {/*Confirm Security Clearance action*/}
-            <ConfirmEntityDialog
+            {/*Confirm Move Bags To Gate action*/}
+            {/*<ConfirmEntityDialog
                 open={isConfirm}
                 onClose={() => setConfirm(false)}
                 title="Security Clearance"
-                dataId={flight_id}
+                dataId={selectedRow?.flight?.toString() ?? ''}
                 message={
                     <>
-                        Are you sure you want to proceed with clearing the bag with ID <b>{selectedRow?.bagId}?</b>
+                        <div>
+                            Are you sure you want to clear the bag with ID <b>{selectedRow?.bagId} </b>
+                            from Flight <b>{selectedRow?.flight}</b>
+                             at Gate <b>{selectedRow?.terminal}-{selectedRow?.gate}</b>
+                        </div>
+                        {outcome && outcome.status !== undefined && (
+                            <Alert severity={outcome.status}>{outcome.message}</Alert>
+                        )}
                     </>
                 }
-                onRemove={handleOnRemove}
-            />
+                onConfirm={(v) => onLoadBagToPlane(v)}
+            />*/}
         </>
-    );
+    )
 }
 
 export default WorkAtClearanceDashboard;
+

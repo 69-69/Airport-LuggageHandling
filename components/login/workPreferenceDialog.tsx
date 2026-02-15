@@ -28,7 +28,7 @@ const WorkPreferenceDialog = ({
         if (user) {
             const updatedUser = {
                 ...user,
-                accessLevel: securityClearance // Security Clearance is Selected
+                workMode: securityClearance // Security Clearance is Selected
             }
 
             // persist updated user

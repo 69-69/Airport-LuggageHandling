@@ -38,7 +38,7 @@ const GatePreferenceDialog = ({
         if (user) {
             const updatedUser = {
                 ...user,
-                accessLevel: newGate, // The Selected Gate Number
+                workMode: newGate, // The Selected Gate Number
             }
 
             // persist updated user

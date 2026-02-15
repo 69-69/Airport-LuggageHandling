@@ -115,8 +115,9 @@ export const DropdownMenu = ({
 };
 
 export const AutocompleteDropdown = (
-    {label, data, onChange, value, helperText}: {
+    {label, data, onChange, value, disabled, helperText}: {
         label: string;
+        disabled?: boolean;
         data: string[];
         value: string;
         helperText?: string;
@@ -124,6 +125,7 @@ export const AutocompleteDropdown = (
     }) => {
     return (
         <Autocomplete
+            disabled={disabled}
             freeSolo
             options={[
                 ...new Set(
