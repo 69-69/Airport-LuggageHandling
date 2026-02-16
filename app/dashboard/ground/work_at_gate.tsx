@@ -98,6 +98,14 @@ const WorkAtGateDashboard = ({user}: { user: AuthUser | null }) => {
             });
         }
 
+        // Validation: Ensure bag is at the gate
+        if ((selectedRow.status as BagLocationEnum) !== BagLocationEnum.GATE) {
+            return setOutcome({
+                status: 'error',
+                message: `Cannot load bag with ID ${selectedRow.bagId}: Bag is not at the gate.`,
+            });
+        }
+
         try {
             bagService.loadToFlight(selectedRow.bagId.toString());
             fetchFlights();
