@@ -111,10 +111,10 @@ const ConfirmDepartureDialog = ({
                             <Typography sx={{mt: 2}}>
                                 [ <b>Flight:</b> {flight.flightNumber} ]<br/><br/>
                                 {
-                                    allBoarded ? 'All passengers boarded!' : unboardedTotal + ' more passenger(s) not yet onboard!'
+                                    allBoarded ? '+ All passengers boarded!' : '- '+unboardedTotal + ' more passenger(s) not yet onboard!'
                                 }<br/>
                                 {
-                                    allLoaded ? 'All bags loaded!' : 'Some Unloaded bags!'
+                                    allLoaded ? '+ All bags loaded!' : '- Some bags are not loaded!'
 
                                 }<br/>
                             </Typography>
