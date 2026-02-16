@@ -59,10 +59,10 @@ const Passengers = () => {
             const ticket = selectedRow.ticket as string;
             const flightNumber = selectedRow.flight as string;
 
-            // 1️⃣ Validate flight/ticket relation first
+            // Validate flight/ticket relation first
             flightService.removeTicket(flightNumber, ticket);
 
-            // 2️⃣ Then delete dependent data
+            // Then delete dependent data
             passengerService.remove(ticket);
             bagService.remove(ticket);
 

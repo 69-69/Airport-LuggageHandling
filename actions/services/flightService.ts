@@ -102,6 +102,14 @@ export const flightService = {
 
     remove(flightNumber: string) {
         const flights = this.getAll();
+
+        if (flights.some((f) => f.tickets.length > 0)) {
+            throw new Error(
+                `Cannot remove Flight ${flightNumber}: it currently has assigned passengers. ` +
+                `Please reassign all passengers to other flights before proceeding.`
+            );
+        }
+
         storageService.set(_KEY, flights.filter((f) => f.flightNumber !== flightNumber));
     },
 
@@ -109,7 +117,7 @@ export const flightService = {
         const flights = this.getAll();
         const flight = flights.find(f => f.flightNumber === flightNumber);
 
-        if (!flight) throw new Error("Flight not found");
+        if (!flight) return; // throw new Error("Flight not found");
 
         const initialLength = flight.tickets.length;
 

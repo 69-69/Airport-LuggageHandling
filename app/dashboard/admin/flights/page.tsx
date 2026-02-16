@@ -27,10 +27,11 @@ interface FlightRow extends DataRow {
     action: string;
 }
 
-const columns = ["flight", "airline", "terminal", "gate", "destination", "departure", "passengers", "status","action"];
+const columns = ["flight", "airline", "terminal", "gate", "destination", "departure", "passengers", "status", "action"];
 
 const Flights = () => {
     const router = useRouter();
+    const [error, setError] = React.useState('');
     // const [outcome, setOutcome] = React.useState<OutcomeProps>();
     const [isConfirm, setConfirm] = React.useState(false);
     const [selectedRow, setSelectedRow] = React.useState<DataRow>();
@@ -51,20 +52,30 @@ const Flights = () => {
     useEffect(() => fetchFlights(), []);
 
     const handleOnRemove = (proceed: boolean) => {
+        try {
+            if (proceed && selectedRow?.flight !== null) {
+                flightService.remove(selectedRow?.flight as string);
 
-        if (proceed && selectedRow?.flight !== null) {
-            flightService.remove(selectedRow?.flight as string);
-            fetchFlights();
-            setConfirm(false); // UI state stays on client
+                // Refresh flight list after removal
+                fetchFlights();
+
+                // Close confirmation UI
+                setConfirm(false);
+            }
+        } catch (err: unknown) {
+            // Safely extract error message
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message);
+            console.error("Failed to remove flight:", err);
         }
     };
 
     return (
         <RoleGuard allowedRoles={[RoleEnum.ADMIN]}>
-            <PageTitleUpdater />
+            <PageTitleUpdater/>
             <UITable<FlightRow>
                 columns={columns}
-                rows={(Array.isArray(flightRows)? flightRows : []).map((f: Flight) => ({
+                rows={(Array.isArray(flightRows) ? flightRows : []).map((f: Flight) => ({
                     flight: f.flightNumber.toUpperCase(),
                     airline: formatAirline(f.airlineName),
                     terminal: f.terminal.toUpperCase(),
@@ -77,7 +88,7 @@ const Flights = () => {
                 }))}
                 title="Flight Management"
                 topButton={
-                    <Button variant="outlined" sx={{textTransform:'none'}} onClick={() => setIsAdd(true)}>
+                    <Button variant="outlined" sx={{textTransform: 'none'}} onClick={() => setIsAdd(true)}>
                         Add Flight
                     </Button>
                 }
@@ -105,6 +116,7 @@ const Flights = () => {
                 onClose={() => setConfirm(false)}
                 title="Remove Flight"
                 dataId={selectedRow?.flight as string}
+                errored={error}
                 message={
                     <>
                         Are you sure you want to remove Flight<b>{selectedRow?.flight}</b>from the system?
