@@ -95,7 +95,7 @@ const ConfirmDepartureDialog = ({
             title="Confirm Departure"
             cancelLabel='Cancel'
             confirmLabel='Notify Administrator'
-            confirmDisabled={!flight || !user}
+            confirmDisabled={!flight || !user || !allLoaded || !allBoarded}
             onConfirm={handleSubmit}
             content={
                 <>
