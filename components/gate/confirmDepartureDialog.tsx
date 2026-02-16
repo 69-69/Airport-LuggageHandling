@@ -6,7 +6,6 @@ import {
 } from '@mui/material';
 import Info from "@mui/icons-material/Info";
 import UiDialog from "@/components/uiDialog";
-import {Check} from "@mui/icons-material";
 import {passengerService} from "@/actions/services/passengerService";
 import {
     AuthUser,
@@ -112,10 +111,10 @@ const ConfirmDepartureDialog = ({
                             <Typography sx={{mt: 2}}>
                                 [ <b>Flight:</b> {flight.flightNumber} ]<br/><br/>
                                 {
-                                    allBoarded ? '<Check fontSize="small"/> All passengers boarded!' : unboardedTotal + ' more passenger(s) not yet onboard!'
+                                    allBoarded ? 'All passengers boarded!' : unboardedTotal + ' more passenger(s) not yet onboard!'
                                 }<br/>
                                 {
-                                    allLoaded ? '<Check fontSize="small"/> All bags loaded!' : 'Some Unloaded bags!'
+                                    allLoaded ? 'All bags loaded!' : 'Some Unloaded bags!'
 
                                 }<br/>
                             </Typography>
