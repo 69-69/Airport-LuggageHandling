@@ -69,12 +69,6 @@ export const addStaff = async (row: DataRow): Promise<SendResult> => {
 
 };
 
-export async function removeStaff(staffId: string | number) {
-    // server-side logic
-    console.log('staff-id', staffId);
-    // await db.delete('staff', staffId);
-    return {success: true};
-}
 
 // Flight
 export function addFlight(data: DataRow): SendResult {
@@ -144,7 +138,7 @@ export function addPassenger(data: DataRow): SendResult {
     try {
         const {firstName, lastName, idNumber, ticketNumber, flightNumber} = data;
 
-        if (!firstName || !lastName || !idNumber || !ticketNumber || !flightNumber) {
+        if (!firstName || !lastName || !idNumber || !ticketNumber) {
             return {success: false, error: 'All fields are required'};
         }
 
@@ -236,19 +230,6 @@ export function postMessage(data: DataRow): SendResult {
     console.log('added new passenger', data);
     return {success: true};
 }
-
-export const fetchOnBoardData = async () => {
-    const res = await fetch(`/api/onboard/flight`);
-    if (!res.ok) throw new Error('Failed to fetch');
-    return await res.json();
-};
-
-export const fetchBaggage = async (flight_id: string) => {
-    const res = await fetch(`/api/baggage/${flight_id}`);
-    if (!res.ok) throw new Error('Failed to fetch');
-    return await res.json();
-};
-
 
 
 

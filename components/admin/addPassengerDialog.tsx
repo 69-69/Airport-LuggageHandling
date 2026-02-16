@@ -52,6 +52,7 @@ const AddPassengerDialog = ({
     useEffect(() => {
         if (open) {
             fetchFlights();
+            setOutcome(undefined);
         }
     }, [open]); // re-run whenever the dialog is opened
 
@@ -63,9 +64,9 @@ const AddPassengerDialog = ({
         if (!namePattern.test(lastName)) {
             return setOutcomeHelper('error', 'Enter a valid last name', setOutcome);
         }
-        if (!flightNumber) {
+        /*if (!flightNumber) {
             return setOutcomeHelper('error', 'Flight Number is required', setOutcome);
-        }
+        }*/
         if (!idNumber || !isNumeric(idNumber)) {
             return setOutcomeHelper('error', 'Enter a valid ID number', setOutcome);
         }
@@ -87,12 +88,14 @@ const AddPassengerDialog = ({
             lastName: lastName,
             idNumber: idNumber,
             ticketNumber: ticketNumber,
-            flightNumber: flightNumber,
+            flightNumber: flightNumber || '',
         });
 
         if (result.success) {
             // Add ticket to Flight
-            flightService.update({flightNumber: flightNumber, ticket: ticketNumber});
+            if (flightNumber) {
+                flightService.update({flightNumber: flightNumber, ticket: ticketNumber});
+            }
 
             if (refreshPassengers) {
                 refreshPassengers();
@@ -130,7 +133,7 @@ const AddPassengerDialog = ({
             title="Add Passenger"
             onConfirm={handleSubmit}
             cancelLabel={'Cancel'}
-            confirmDisabled={!firstName || !lastName || !flightNumber || !idNumber || !ticketNumber}
+            confirmDisabled={!firstName || !lastName || !idNumber || !ticketNumber}
             confirmLabel={'Add'}
             content={
                 <>
@@ -196,6 +199,7 @@ const AddPassengerDialog = ({
                     />
                     <AutocompleteDropdown
                         label="Flight"
+                        helperText="Flight can be assign now or after"
                         data={
                             (Array.isArray(flights) ? flights : []).map((f) => (f.flightNumber))
                         }

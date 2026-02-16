@@ -114,8 +114,8 @@ const UITable = <T extends DataRow>({
                                             <TableCell key={col} align={tableAlign}>
                                                 {col === "action" ? (
                                                     getButton<T>(i, row[col] as string, row, false, onActionCallback)
-                                                ) : col === "status" ? (
-                                                    getButton<T>(i, row[col] as string, row, true, onStatusCallback)
+                                                ) : col === "status" || col === "update" ? (
+                                                    getButton<T>(i, row[col] as string, row, col === "status", onStatusCallback)
                                                 ) : (
                                                     row[toCamelCase(col)]
                                                 )}

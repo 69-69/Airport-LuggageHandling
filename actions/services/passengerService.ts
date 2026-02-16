@@ -1,7 +1,8 @@
 // actions/services/passengerService.ts
 
 import storageService from "@/actions/services/storageService";
-import {AuthResult, Flight, FlightSnapshot, Passenger, PassengerStatus, PassengerStatusEnum} from "@/types/models";
+import {AuthResult, FlightSnapshot, Passenger, PassengerStatusEnum} from "@/types/models";
+import {flightService} from "@/actions/services/flightService";
 
 const _KEY = "all_passengers";
 
@@ -56,7 +57,6 @@ export const passengerService = {
         return passenger;
     },
 
-
     findSnapshotById(idNumber: string): FlightSnapshot[] {
         const passengers: Passenger[] = this.getAll();
 
@@ -84,11 +84,11 @@ export const passengerService = {
         return passengers.filter((p: Passenger) => p.flightNumber === flightNumber);
     },
 
-    findByTicketNumber(ticketNumber: string): Passenger | undefined {
+    /*findByTicketNumber(ticketNumber: string): Passenger | undefined {
         const passengers: Passenger[] = this.getAll();
 
         return passengers.find((p: Passenger) => p.ticketNumber === ticketNumber);
-    },
+    },*/
 
     login(ticketNumber: string, idNumber: string): AuthResult {
         try {
@@ -107,11 +107,11 @@ export const passengerService = {
                 }
             };
         } catch (err) {
-            return { success: false, error: (err as Error).message };
+            return {success: false, error: (err as Error).message};
         }
     },
 
-    updateStatus(ticketNumber: string, status: PassengerStatus): void {
+    /*updateStatus(ticketNumber: string, status: PassengerStatus): void {
         const passengers = this.getAll();
         const p = passengers.find(p => p.ticketNumber === ticketNumber);
 
@@ -119,6 +119,54 @@ export const passengerService = {
 
         p.status = status;
         storageService.set(_KEY, passengers);
+    },
+
+    updateFlight(ticketNumber: string, flightNumber: string): void {
+        const passengers = this.getAll();
+        const p = passengers.find(p => p.ticketNumber === ticketNumber);
+
+        if (!p) throw new Error("Passenger not found");
+
+        p.flightNumber = flightNumber;
+        storageService.set(_KEY, passengers);
+    },*/
+
+    changePassengerFlight(ticket: string, newFlightNumber: string): void {
+        const passengers = this.getAll();
+        const flights = flightService.getAll();
+
+        const passenger = passengers.find(p => p.ticketNumber === ticket);
+        if (!passenger) throw new Error("Passenger not found");
+
+        const oldFlightNumber = passenger.flightNumber;
+
+        if (oldFlightNumber === newFlightNumber) {
+            throw new Error(`Passenger already assigned to this Flight ${newFlightNumber}`);
+        }
+
+        const newFlight = flights.find(f => f.flightNumber === newFlightNumber);
+        if (!newFlight) throw new Error("New flight not found");
+
+        // 🔥 REMOVE FROM OLD FLIGHT (even if empty string check removed)
+        const oldFlight = flights.find(f => f.flightNumber === oldFlightNumber);
+        if (oldFlight) {
+            oldFlight.tickets = oldFlight.tickets.filter(t => t !== ticket);
+        }
+
+        // Prevent duplicate
+        if (newFlight.tickets.includes(ticket)) {
+            throw new Error("Ticket already exists on new flight");
+        }
+
+        // Add to new flight
+        newFlight.tickets.push(ticket);
+
+        // Update passenger
+        passenger.flightNumber = newFlightNumber;
+
+        // Save both
+        storageService.set(_KEY, passengers);
+        storageService.set("all_flights", flights);
     },
 
     checkIn(ticketNumber: string) {

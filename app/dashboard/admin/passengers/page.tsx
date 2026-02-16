@@ -14,6 +14,7 @@ import {RoleEnum} from "@/types/userRole";
 import PageTitleUpdater from "@/components/pageTitleUpdater";
 import RoleGuard from "@/actions/roleGuard";
 import {flightService} from "@/actions/services/flightService";
+import AssignFlightToDialog from "@/components/admin/updatePassengerDialog";
 
 interface PassengerRow extends DataRow {
     name: string;
@@ -21,10 +22,11 @@ interface PassengerRow extends DataRow {
     ticket: string;
     status: string;
     bags: number;
+    update: string;
     action: string;
 }
 
-const columns = ["name", "ticket", "flight", "status", "bags", "action"];
+const columns = ["name", "ticket", "flight", "status", "bags", "update", "action"];
 
 const Passengers = () => {
 
@@ -32,6 +34,7 @@ const Passengers = () => {
     const [isConfirm, setConfirm] = useState(false);
     const [selectedRow, setSelectedRow] = useState<DataRow>();
     const [isAdd, setIsAdd] = useState(false);
+    const [showUpdate, setShowUpdate] = useState(false);
     const [passengerRows, setPassengerRows] = useState<Passenger[]>([]);
 
     // Fetch Passenger list
@@ -86,6 +89,7 @@ const Passengers = () => {
                     ticket: p.ticketNumber,
                     status: p.status,
                     bags: bagService.getBagsByTicket(p.ticketNumber),
+                    update: "Update",
                     action: "Remove",
                 }))}
                 title="Passenger Management"
@@ -106,6 +110,11 @@ const Passengers = () => {
                     setSelectedRow(row);
                     setConfirm(true);
                 }}
+                onStatusCallback={(row: PassengerRow) => {
+                    console.log('row-all', row);
+                    setSelectedRow(row);
+                    setShowUpdate(true);
+                }}
             />
             <ConfirmEntityDialog
                 open={isConfirm}
@@ -123,6 +132,15 @@ const Passengers = () => {
             <AddPassengerDialog
                 open={isAdd}
                 onClose={() => setIsAdd(false)}
+                refreshPassengers={fetchPassengers}
+                // outcome={outcome}
+                // setOutcome={setOutcome}
+                // onAddPassenger={handleAddPassenger}
+            />
+            <AssignFlightToDialog
+                open={showUpdate}
+                ticketNumber={selectedRow?.ticket as string}
+                onClose={() => setShowUpdate(false)}
                 refreshPassengers={fetchPassengers}
                 // outcome={outcome}
                 // setOutcome={setOutcome}

@@ -69,6 +69,8 @@ export const flightService = {
         flightNumber: string,
         {gate, terminal}: { gate: string, terminal: string }
     ): Flight | undefined {
+        if (!flightNumber) return;
+
         const passengers = this.getAll();
         const p = passengers.find(p => p.flightNumber === flightNumber);
 
@@ -87,6 +89,7 @@ export const flightService = {
         const {flights, idx} = this.find(flightNumber);
 
         if (idx === -1) throw new Error("Flight not found");
+
         if (flights[idx].tickets.indexOf(ticket) > -1) {
             throw new Error(`Ticket ${ticket} already in use`);
         }
@@ -119,4 +122,18 @@ export const flightService = {
         storageService.set(_KEY, flights);
     }
 
+   /*assignFlight({flightNumber, ticket}: { flightNumber: string, ticket: string }): void {
+        const {flights, idx} = this.find(flightNumber);
+
+        if (idx === -1) throw new Error("Flight not found");
+
+        if (flights[idx].tickets.indexOf(ticket) > -1) {
+            throw new Error(`Ticket ${ticket} already assign to flight ${flightNumber}`);
+        }
+
+        // Add new ticket
+        flights[idx].tickets.push(ticket);
+
+        storageService.set(_KEY, flights);
+    },*/
 }

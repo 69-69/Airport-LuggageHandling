@@ -58,6 +58,8 @@ const AddFlightDialog = ({
             return setOutcomeHelper('error', 'Flight number is required', setOutcome);
         }
         if (flightNumber.length !== 6) {
+            // two letters of Airline code followed by a 4-digit flight number;
+            // e.g., DL0245
             return setOutcomeHelper('error', 'Flight number must be at most 6 characters long.', setOutcome);
         }
         // Letters at start + exactly 4 digits
