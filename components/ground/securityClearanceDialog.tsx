@@ -53,14 +53,22 @@ const ClearanceDialog = ({
 
         // Validation: Ensure passenger is boarded
         const passenger = passengerService.findByTicket(selectedRow.ticket.toString());
-        if (!passenger || passenger.status !== PassengerStatusEnum.CHECKED_IN) {
+        if (!passenger) {
             return setOutcome({
                 status: 'error',
-                message: `Cannot process bag ${selectedRow.bagId}: Passenger is not checked-in.`,
+                message: `Cannot process bag ${selectedRow.bagId}: Passenger not found.`,
             });
         }
 
         try {
+            // Only checked-in passengers can have bags processed for security / clearance
+            if (passenger.status !== PassengerStatusEnum.CHECKED_IN) {
+                return setOutcome({
+                    status: 'error',
+                    message: `Cannot process bag ${selectedRow.bagId}: Passenger is not checked-in.`,
+                });
+            }
+
             if (status === 'CLEARED') {
                 bagService.moveTo(selectedRow.bagId.toString(), BagLocationEnum.GATE);
 

@@ -55,7 +55,13 @@ const UiDialog = ({
     return (
         <Dialog
             open={open}
-            onClose={onCancel}
+            onClose={(event, reason) => {
+                // Prevent closing when clicking outside or pressing Escape
+                if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+                    return;
+                }
+                onCancel(); // allow closing only via buttons
+            }}
             aria-labelledby="dialog-title"
             aria-describedby="dialog-description"
         >

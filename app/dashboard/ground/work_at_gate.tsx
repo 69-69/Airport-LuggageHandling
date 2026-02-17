@@ -102,7 +102,7 @@ const WorkAtGateDashboard = ({user}: { user: AuthUser | null }) => {
         if ((selectedRow.status as BagLocationEnum) !== BagLocationEnum.GATE) {
             return setOutcome({
                 status: 'error',
-                message: `Cannot load bag with ID ${selectedRow.bagId}: Bag is not at the gate.`,
+                message: `Cannot load bag with ID ${selectedRow.bagId}: Bag is not at the gate: Not Cleared.`,
             });
         }
 
